@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebADB 连接</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; padding: 16px; }
+        .row { display: flex; gap: 16px; align-items: flex-start; }
+        .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+        .btn { padding: 8px 12px; border: 1px solid #666; border-radius: 6px; cursor: pointer; background: #f7f7f7; }
+        .btn.primary { background: #2b7cff; color: #fff; border-color: #2b7cff; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        #screen { width: 540px; max-width: 100%; background: #000; display: none; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>连接设备（WebADB）</h1>
+
+    <div class="card">
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button id="connect" class="btn primary">连接设备</button>
+            <button id="disconnect" class="btn" disabled>断开连接</button>
+            <span id="status">未连接</span>
+        </div>
+        <div class="mono" id="log" style="margin-top:8px; white-space:pre-wrap;"></div>
+    </div>
+
+    <div class="row" style="margin-top:16px;">
+        <div class="card" style="flex:1;">
+            <h3>设备信息</h3>
+            <div>型号：<span id="model">-</span></div>
+            <div>分辨率：<span id="resolution">-</span></div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+                <button id="readModel" class="btn">读取型号</button>
+                <button id="startPreview" class="btn">启动预览</button>
+                <button id="stopPreview" class="btn" disabled>停止预览</button>
+            </div>
+            <img id="screen" alt="设备屏幕预览 (点击控制)" />
+        </div>
+        <div class="card" style="flex:1;">
+            <h3>ADB Shell</h3>
+            <textarea id="shellInput" rows="4" style="width:100%;" placeholder="输入 ADB shell 指令，例如：getprop ro.product.model"></textarea>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+                <button id="runShell" class="btn">执行</button>
+            </div>
+            <pre id="shellOutput" class="mono" style="margin-top:8px; min-height:80px;"></pre>
+        </div>
+    </div>
+
+    <script>
+        // WebUSB 可用性检查
+        function ensureWebUsbAvailable() {
+            const isSecure = window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            if (!isSecure) {
+                throw new Error('WebUSB 需要安全上下文（HTTPS 或 localhost）。');
+            }
+            if (!('usb' in navigator)) {
+                throw new Error('当前浏览器不支持 WebUSB。请使用 Chrome/Edge。');
+            }
+        }
+
+        const logEl = document.getElementById('log');
+        const statusEl = document.getElementById('status');
+        const modelEl = document.getElementById('model');
+        const resolutionEl = document.getElementById('resolution');
+        const screenEl = document.getElementById('screen');
+        const connectBtn = document.getElementById('connect');
+        const disconnectBtn = document.getElementById('disconnect');
+        const readModelBtn = document.getElementById('readModel');
+        const startPreviewBtn = document.getElementById('startPreview');
+        const stopPreviewBtn = document.getElementById('stopPreview');
+        const runShellBtn = document.getElementById('runShell');
+        const shellInput = document.getElementById('shellInput');
+        const shellOutput = document.getElementById('shellOutput');
+
+        let device = null; // 连接对象（WebADB 或 legacy）
+        let deviceSize = { width: 0, height: 0 };
+
+        function appendLog(msg) {
+            logEl.textContent += `\n${msg}`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function setConnectedUI(connected) {
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+            readModelBtn.disabled = !connected;
+            startPreviewBtn.disabled = !connected;
+            stopPreviewBtn.disabled = true;
+            statusEl.textContent = connected ? '已连接' : '未连接';
+        }
+
+        async function fetchResolution() {
+            try {
+                // 通过 WebADB 执行 `wm size` 获取物理分辨率
+                const out = await device.shell('wm size');
+                const text = typeof out === 'string' ? out : (await out.text?.()) || '';
+                const m = text.match(/Physical size:\s*(\d+)x(\d+)/i) || text.match(/(\d+)x(\d+)/);
+                if (m) {
+                    deviceSize.width = parseInt(m[1], 10);
+                    deviceSize.height = parseInt(m[2], 10);
+                    resolutionEl.textContent = `${deviceSize.width}x${deviceSize.height}`;
+                } else {
+                    resolutionEl.textContent = '未知';
+                }
+            } catch (e) {
+                console.error(e);
+                resolutionEl.textContent = '读取失败';
+            }
+        }
+
+        async function doConnect() {
+            try {
+                ensureWebUsbAvailable();
+                appendLog('开始连接…');
+
+                if (window.WebADB && typeof window.WebADB.connectAdb === 'function') {
+                    // 优先使用本地打包的 @yume-chan 库（更健壮）
+                    device = await window.WebADB.connectAdb();
+                } else if (window.Adb && typeof window.Adb.open === 'function') {
+                    // 兼容 legacy webadb.js
+                    device = await window.Adb.open('WebUSB');
+                } else {
+                    throw new Error('未找到可用的 WebADB 实现。');
+                }
+
+                setConnectedUI(true);
+                appendLog('连接成功。');
+                await fetchResolution();
+            } catch (e) {
+                console.error(e);
+                const isNoDevice = e?.name === 'NotFoundError' || /No device selected/i.test(e?.message || '');
+                if (isNoDevice) {
+                    statusEl.textContent = '未连接';
+                    appendLog('未选择设备。请在弹出的设备列表中选择你的手机，并确保已开启 USB 调试。');
+                    return;
+                }
+                statusEl.textContent = '连接失败';
+                appendLog(`连接失败：${e?.message || e}`);
+            }
+        }
+
+        async function doDisconnect() {
+            try {
+                if (device?.close) await device.close();
+            } catch {}
+            device = null;
+            setConnectedUI(false);
+            appendLog('已断开。');
+        }
+
+        async function readModel() {
+            try {
+                const out = await device.shell('getprop ro.product.model');
+                const text = typeof out === 'string' ? out : (await out.text?.()) || '';
+                modelEl.textContent = text.trim() || '-';
+            } catch (e) {
+                console.error(e);
+                appendLog('读取型号失败：' + (e?.message || e));
+            }
+        }
+
+        async function runShell() {
+            const cmd = shellInput.value.trim();
+            if (!cmd) return;
+            try {
+                const out = await device.shell(cmd);
+                const text = typeof out === 'string' ? out : (await out.text?.()) || '';
+                shellOutput.textContent = text;
+            } catch (e) {
+                console.error(e);
+                shellOutput.textContent = '执行失败：' + (e?.message || e);
+            }
+        }
+
+        function startPreview() {
+            screenEl.src = '/stream';
+            screenEl.style.display = 'block';
+            startPreviewBtn.disabled = true;
+            stopPreviewBtn.disabled = false;
+            appendLog('启动预览… 如果黑屏，请确保已安装 scrcpy 与 ffmpeg。');
+        }
+
+        function stopPreview() {
+            screenEl.src = '';
+            screenEl.style.display = 'none';
+            startPreviewBtn.disabled = false;
+            stopPreviewBtn.disabled = true;
+            appendLog('已停止预览。');
+        }
+
+        async function onScreenClick(ev) {
+            if (!device) return;
+            if (!deviceSize.width || !deviceSize.height) await fetchResolution();
+            const rect = screenEl.getBoundingClientRect();
+            const x = ev.clientX - rect.left;
+            const y = ev.clientY - rect.top;
+            const scaleX = deviceSize.width / rect.width;
+            const scaleY = deviceSize.height / rect.height;
+            const dx = Math.round(x * scaleX);
+            const dy = Math.round(y * scaleY);
+            try {
+                const res = await fetch('/api/tap', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ x: dx, y: dy })
+                });
+                const data = await res.json();
+                appendLog(`tap(${dx}, ${dy}) → ${data.ok ? 'OK' : 'FAIL'}`);
+            } catch (e) {
+                console.error(e);
+                appendLog('发送点击失败：' + (e?.message || e));
+            }
+        }
+
+        connectBtn.addEventListener('click', doConnect);
+        disconnectBtn.addEventListener('click', doDisconnect);
+        readModelBtn.addEventListener('click', readModel);
+        startPreviewBtn.addEventListener('click', startPreview);
+        stopPreviewBtn.addEventListener('click', stopPreview);
+        runShellBtn.addEventListener('click', runShell);
+        screenEl.addEventListener('click', onScreenClick);
+    </script>
+</body>
+</html>

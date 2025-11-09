@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Cognitive Agent Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1117; --panel:#1a1b26; --text:#e5e5e5; --accent:#4e9af1; --border:#2a2a38;
+  --chat-width:360px; --safe-gutter:24px;
+  --safe-right:calc(var(--chat-width) + var(--safe-gutter));
+  --msg-user:#4e9af1; --msg-agent:#2b2b3a; --input-bg:#2a2a38;
+}
+
+/* 全局 */
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Helvetica,Arial;}
+
+/* 顶栏 */
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 22px;background:var(--panel);border-bottom:1px solid var(--border);
+}
+header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
+
+/* 舞台整体布局 */
+.stage{
+  padding:24px;
+  padding-right:calc(var(--safe-right));
+  padding-bottom:var(--safe-gutter);
+}
+
+/* 主区布局：上两列（手机、轨迹）+ 下整行（日志） */
+.main-console{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  grid-template-rows:auto 240px;
+  gap:24px;
+  align-items:start;
+  grid-template-areas:
+    "phone traj"
+    "logs logs";
+}
+
+/* 左侧手机区域 */
+.phone-container{
+  grid-area:phone;
+  display:flex;justify-content:center;align-items:center;
+}
+.phone-frame{
+  background:linear-gradient(145deg,#1a1a1a,#2a2a2a);
+  border-radius:36px;padding:12px;
+  box-shadow:0 6px 25px rgba(0,0,0,0.4);
+  display:flex;justify-content:center;align-items:center;
+}
+.phone-screen{width:250px;height:520px;border-radius:24px;object-fit:cover;}
+
+/* Trajectory 面板 */
+.traj-panel{
+  grid-area:traj;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  margin-right: 16px;
+  padding:12px 16px;
+  display:flex;
+  flex-direction:column;
+  height:540px;
+}
+.traj-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.traj-header b{color:var(--accent);}
+.traj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
+.traj-item{
+  width:100%;
+  height:80%;
+  border:2px dashed var(--border);
+  border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#999;
+  font-size:15px;
+  font-weight:500;
+  cursor:pointer;
+  transition:all .25s ease;
+}
+.traj-item:hover{border-color:var(--accent);color:var(--accent);background:rgba(78,154,241,0.08);}
+.traj-desc{
+  text-align:center;
+  margin-top:8px;
+  font-size:13px;
+  font-style:italic;
+  color:#777;
+  opacity:0.85;
+}
+
+/* Execution Logs 面板：位于手机和轨迹下方横跨全宽 */
+.logs-container{
+  grid-area:logs;
+  margin-right: 16px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  height:280px;
+  overflow-y:auto;
+}
+.logs-container h3{
+  color:var(--accent);
+  font-size:16px;
+  margin:0;
+  padding:12px 24px;
+  position:sticky;
+  top:0;
+  background:var(--panel);
+  z-index:1;
+  border-bottom:1px solid var(--border);
+}
+#logArea{flex:1;padding:0 24px;}
+.log-entry{padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+.log-entry.user{color:#4e9af1;}
+.log-entry.agent{color:#22c55e;}
+
+/* 按钮 */
+#saveTrajectory{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--accent);color:#fff;border:none;border-radius:8px;
+  padding:6px 12px;cursor:pointer;transition:background .2s;
+}
+#saveTrajectory:hover{background:#1d4fd7;}
+
+/* 聊天框 */
+#chat{
+  position:fixed;
+  top:80px;
+  right:var(--safe-gutter);
+  bottom:var(--safe-gutter);
+  width:var(--chat-width);
+  display:flex;flex-direction:column;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+}
+#chat-messages{flex:1;overflow-y:auto;padding:18px;}
+.message{display:flex;align-items:flex-start;margin:12px 0;gap:10px;}
+.message.user{flex-direction:row-reverse;}
+.avatar{width:32px;height:32px;border-radius:50%;background:#ccc;flex-shrink:0;}
+.avatar.agent{background:url('https://img.icons8.com/color/48/bot.png') center/cover;}
+.avatar.user{background:url('https://img.icons8.com/color/48/user.png') center/cover;}
+.bubble{max-width:75%;padding:10px 14px;border-radius:12px;line-height:1.4;}
+.message.agent .bubble{background:var(--msg-agent);border-radius:12px 12px 12px 4px;}
+.message.user .bubble{background:var(--msg-user);color:#fff;border-radius:12px 12px 4px 12px;}
+#chat-input{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--panel);}
+#chat-input input{flex:1;background:var(--input-bg);border:none;border-radius:10px;padding:10px 12px;color:var(--text);}
+#chat-input button{background:var(--accent);border:none;color:#fff;border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:600;}
+
+/* 滚动条 */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:#333;border-radius:4px;}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>🧠 Cognitive Agent Console</h1>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <select id="agentMode" style="background:none;border:1px solid var(--border);
+        color:inherit;border-radius:6px;padding:4px 8px;cursor:pointer;">
+      <option>UI-TARS</option><option>AgentCPM-GUI</option><option>GUI-Owl</option>
+    </select>
+    <span id="deviceModel" style="font-size:13px;color:#9aa4b2;">Loading...</span>
+    <button id="themeToggle" onclick="toggleTheme()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;">🌓 Theme</button>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="main-console">
+    <!-- 左：手机 -->
+    <div class="phone-container">
+      <div class="phone-frame">
+        <img src="/video_feed" class="phone-screen" alt="Device Screen">
+      </div>
+    </div>
+
+    <!-- 右：轨迹 -->
+    <div class="traj-panel">
+      <div class="traj-header">
+        <b>🧭 Trajectory</b>
+        <button id="saveTrajectory">Save</button>
+      </div>
+      <div class="traj-grid">
+        <div>
+          <div class="traj-item">＋ New Frame</div>
+          <div class="traj-desc">Updating Soon...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下：日志 -->
+    <div class="logs-container">
+      <h3>Execution Logs</h3>
+      <div id="logArea"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 聊天界面 -->
+<div id="chat">
+  <div id="chat-messages">
+    <div class="message agent">
+      <div class="avatar agent"></div>
+      <div class="bubble">Hello, I'm your mobile agent. What task should I execute?</div>
+    </div>
+  </div>
+  <div id="chat-input">
+    <input id="userInput" placeholder="Type your command… (e.g. 打开微信并给张三发消息)">
+    <button onclick="sendMsg()">Send</button>
+  </div>
+</div>
+
+<script>
+function addLog(msg, role='system'){
+  const log=document.createElement('div');
+  log.className='log-entry '+(role==='user'?'user':'agent');
+  log.textContent=(role==='user'?'🧑‍💻 User: ':'🤖 Agent: ')+msg;
+  document.getElementById('logArea').appendChild(log);
+  log.scrollIntoView();
+}
+
+function sendMsg(){
+  const ip=document.getElementById('userInput');
+  const text=ip.value.trim(); if(!text) return;
+  pushMsg('user', text);
+  addLog(text,'user');
+  ip.value='';
+  setTimeout(()=>{
+    const reply='Understood. Executing: '+text;
+    pushMsg('agent', reply);
+    addLog(reply,'agent');
+  },500);
+}
+
+function pushMsg(role,text){
+  const msg=document.createElement('div'); msg.className='message '+role;
+  const avatar=document.createElement('div'); avatar.className='avatar '+role;
+  const bubble=document.createElement('div'); bubble.className='bubble'; bubble.textContent=text;
+  msg.appendChild(avatar); msg.appendChild(bubble);
+  document.getElementById('chat-messages').appendChild(msg);
+  msg.scrollIntoView();
+}
+
+/* 主题切换 */
+function toggleTheme(){
+  const root=document.documentElement;
+  const dark=getComputedStyle(root).getPropertyValue('--bg')==='#0f1117';
+  if(dark){
+    root.style.setProperty('--bg','#f5f6fa');
+    root.style.setProperty('--panel','#ffffff');
+    root.style.setProperty('--text','#1a1a1a');
+    root.style.setProperty('--accent','#3b82f6');
+    root.style.setProperty('--border','#e2e2e2');
+    root.style.setProperty('--msg-user','#3b82f6');
+    root.style.setProperty('--msg-agent','#e8e8ed');
+    root.style.setProperty('--input-bg','#f0f1f5');
+  } else {
+    root.style.setProperty('--bg','#0f1117');
+    root.style.setProperty('--panel','#1a1b26');
+    root.style.setProperty('--text','#e5e5e5');
+    root.style.setProperty('--accent','#4e9af1');
+    root.style.setProperty('--border','#2a2a38');
+    root.style.setProperty('--msg-user','#4e9af1');
+    root.style.setProperty('--msg-agent','#2b2b3a');
+    root.style.setProperty('--input-bg','#2a2a38');
+  }
+}
+
+/* 加载设备信息 */
+async function loadDeviceInfo(){
+  try{
+    const res=await fetch("/device_info");
+    const data=await res.json();
+    document.getElementById("deviceModel").textContent=
+      `${data.model} • ${data.resolution} • 🔋${data.battery}`;
+  }catch(e){
+    document.getElementById("deviceModel").textContent="Device not connected";
+  }
+}
+window.addEventListener("load",loadDeviceInfo);
+</script>
+</body>
+</html>
