@@ -49,13 +49,95 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
 }
 .phone-frame{
   background:linear-gradient(145deg,#1a1a1a,#2a2a2a);
-  border-radius:36px;padding:12px;
-  box-shadow:0 6px 25px rgba(0,0,0,0.4);
+  border-radius:36px;padding:6px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.35);
   display:flex;justify-content:center;align-items:center;
+  position:relative;
 }
-.phone-screen{width:250px;height:520px;border-radius:24px;object-fit:cover;}
+.phone-screen{width:250px;height:520px;border-radius:24px;object-fit:contain;background:#000;}
+/* 手机中心覆盖层：连接按钮 */
+.phone-overlay{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:none;backdrop-filter:none;
+  padding:0;border-radius:0;
+}
+.phone-overlay .btn{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--accent);color:#fff;cursor:pointer}
+/* 手机浮动面板 */
+.floating-panel{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:760px;height:620px;overflow:auto;
+  background:rgba(24,24,28,0.6);
+  border:1px solid rgba(255,255,255,0.18);
+  border-radius:14px;
+  backdrop-filter:saturate(180%) blur(18px);
+  box-shadow:0 20px 50px rgba(0,0,0,0.55), inset 0 1px rgba(255,255,255,0.08);
+  padding:16px;display:none;z-index:1000;
+}
+.floating-panel h4{margin:0 0 12px 0;color:var(--accent);font-size:16px;font-weight:600;text-align:center;letter-spacing:0.2px}
+.floating-panel .row{display:flex;flex-wrap:wrap;gap:10px}
+.floating-panel .btn{
+  padding:8px 12px;border-radius:10px;cursor:pointer;color:#e5e5e5;
+  background:linear-gradient(180deg, rgba(60,60,68,0.9), rgba(48,48,54,0.9));
+  border:1px solid rgba(255,255,255,0.16);
+  box-shadow:inset 0 -1px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.35);
+  transition:transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+}
+.floating-panel .btn:hover{transform:translateY(-0.5px);background:linear-gradient(180deg, rgba(68,68,76,0.95), rgba(56,56,62,0.95));border-color:rgba(255,255,255,0.22)}
+.floating-panel .btn:active{transform:translateY(0.5px);box-shadow:inset 0 1px rgba(0,0,0,0.35)}
+.floating-panel .btn:focus{outline:none;box-shadow:0 0 0 3px rgba(62,130,246,0.35)}
+.floating-panel .btn.primary{
+  background:linear-gradient(180deg, #4e9af1, #3b82f6);
+  border-color:#3b82f6;color:#fff;
+  box-shadow:inset 0 -1px rgba(0,0,0,0.25), 0 4px 10px rgba(59,130,246,0.35);
+}
+.floating-panel .btn.primary:hover{background:linear-gradient(180deg, #5aa2f3, #4a8cf7)}
+.floating-panel .btn.primary:active{background:linear-gradient(180deg, #3f8ef2, #3579e6)}
+/* 退出用红色长条按钮样式 */
+.floating-panel .btn.danger{
+  background:linear-gradient(180deg, #ff5a5f, #e0454a);
+  border-color:rgba(255,86,94,0.6);
+  color:#fff;
+  box-shadow:inset 0 -1px rgba(0,0,0,0.25), 0 4px 10px rgba(224,69,74,0.35);
+}
+.floating-panel .btn.danger:hover{background:linear-gradient(180deg, #ff6b70, #e65358)}
+.floating-panel .btn.danger:active{background:linear-gradient(180deg, #f24c52, #d63d42)}
+.floating-panel .btn.block{display:block;width:100%;text-align:center;padding:10px 14px;border-radius:12px}
 
-/* Trajectory 面板 */
+/* 控制中心主题 */
+.control-center{display:flex;flex-direction:column;gap:12px}
+.cc-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.12)}
+.cc-title{font-weight:600;color:#eaeaea;letter-spacing:0.2px}
+.cc-sub{color:#a9abb3;font-size:12px}
+.cc-grid{display:grid;grid-template-columns:1fr;gap:12px}
+.control-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px;box-shadow:0 10px 20px rgba(0,0,0,0.25)}
+.cc-card-title{color:#a9abb3;font-size:13px;margin-bottom:8px}
+.cc-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cc-actions.input-row{gap:10px}
+.cc-actions.input-row input{flex:1;min-width:240px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text)}
+.floating-panel .btn.pill{border-radius:999px;padding:8px 14px}
+
+/* 设备详情块样式 */
+#deviceList .details{margin:6px 0 8px 24px;padding:10px;border:1px solid rgba(255,255,255,0.14);border-radius:10px;background:rgba(255,255,255,0.04)}
+/* Mac 风格的 KV 列表 */
+#deviceList .details .kv-list{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:13px}
+#deviceList .details .kv-item-label{color:#a9abb3;}
+#deviceList .details .kv-item-value{color:#e5e5e5;word-break:break-all;opacity:0.95}
+/* 控制面板顶层设备信息 KV 样式 */
+#deviceInfoKV .overview-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:14px}
+#deviceInfoKV .ov-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+#deviceInfoKV .ov-title{font-weight:600;color:#e5e5e5}
+#deviceInfoKV .ov-actions{display:flex;gap:8px}
+#deviceInfoKV .ov-actions .btn{padding:6px 8px;border-radius:8px}
+#deviceInfoKV .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px}
+#deviceInfoKV .ov-item{display:flex;flex-direction:column;gap:6px;padding:6px 8px;border-radius:8px}
+#deviceInfoKV .ov-label{color:#a9abb3;font-size:13px;display:flex;align-items:center;gap:8px}
+#deviceInfoKV .ov-value{color:#e5e5e5;font-size:15px}
+#deviceInfoKV .kv-list{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:13px}
+#deviceInfoKV .kv-item-label{color:#a9abb3;}
+#deviceInfoKV .kv-item-value{color:#e5e5e5;word-break:break-all;opacity:0.95}
+ 
+ /* Trajectory 面板 */
 .traj-panel{
   grid-area:traj;
   background:var(--panel);
@@ -160,18 +242,29 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
 /* 滚动条 */
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-thumb{background:#333;border-radius:4px;}
-</style>
+/* 连接控制条样式 */
+.control-bar{display:flex;justify-content:center;gap:12px;margin:12px 0;}
+.control-bar .btn{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer}
+.control-bar .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.control-bar .btn:disabled{opacity:0.6;cursor:not-allowed}
+</style><!-- 引入 web-scrcpy 客户端资源（与 connect 保持一致） -->
+    <script src="/ws-assets/js/socket.io.js"></script>
+    <script src="/ws-assets/js/input.js"></script>
+    <script src="/ws-assets/js/exp-golomb.js"></script>
+    <script src="/ws-assets/js/h264-sps-parser.js"></script>
+    <script src="/ws-assets/js/video_parser.js"></script>
+    <script src="/ws-assets/js/jmuxer.min.js"></script>
 </head>
 
 <body>
 <header>
-  <h1>🧠 Cognitive Agent Console</h1>
+  <h1>🧠 Cognitive OS Agent</h1>
   <div style="display:flex;align-items:center;gap:16px;">
     <select id="agentMode" style="background:none;border:1px solid var(--border);
         color:inherit;border-radius:6px;padding:4px 8px;cursor:pointer;">
       <option>UI-TARS</option><option>AgentCPM-GUI</option><option>GUI-Owl</option>
     </select>
-    <span id="deviceModel" style="font-size:13px;color:#9aa4b2;">Loading...</span>
+    <button id="headerControl" class="btn" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer" disabled>设备离线</button>
     <button id="themeToggle" onclick="toggleTheme()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;">🌓 Theme</button>
   </div>
 </header>
@@ -180,8 +273,101 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
   <div class="main-console">
     <!-- 左：手机 -->
     <div class="phone-container">
-      <div class="phone-frame">
-        <img src="/video_feed" class="phone-screen" alt="Device Screen">
+      <div class="phone-frame" id="phoneFrame">
+        <video id="player" class="phone-screen" autoplay muted webkit-playsinline playsinline x5-playsinline></video>
+        <!-- MJPEG 回退显示容器，与 connect 保持一致 -->
+        <img id="mjpeg" class="phone-screen" style="display:none" />
+        <div class="phone-overlay" id="connectOverlay">
+           <button id="btnConnect" class="btn">连接并预览</button>
+         </div>
+        <div class="floating-panel" id="floatingPanel" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h4>控制中心</h4>
+            <button id="btnClosePanel" class="btn" aria-label="关闭控制中心" style="padding:4px 8px">✕</button>
+          </div>
+          <div id="devicesSection" style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <b style="color:var(--accent);">设备列表</b>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button id="btnRefreshDevices" class="btn">刷新设备</button>
+              </div>
+            </div>
+            <div id="deviceList" style="max-height:180px;overflow:auto;border:1px dashed var(--border);border-radius:8px;padding:8px"></div>
+          </div>
+          <div id="deviceInfoSection" style="margin:10px 0 12px 0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <b style="color:var(--accent);">设备信息</b>
+              <div style="display:flex;gap:8px;align-items:center;"><button id="btnRefreshInfo" class="btn">刷新信息</button></div>
+            </div>
+            <div id="deviceInfoKV" class="details" style="margin:6px 0 8px 0;padding:10px;border:1px solid rgba(255,255,255,0.14);border-radius:10px;background:rgba(255,255,255,0.04)"></div>
+          </div>
+          <div style="margin-top:6px;">
+            <div class="control-center">
+              <div class="cc-header">
+                <div class="cc-title">控制面板 Control Center</div>
+                <div class="cc-sub">设备：<span id="ccSerial">-</span></div>
+              </div>
+              <div class="cc-grid">
+                <section class="control-card">
+                  <div class="cc-card-title">模拟按键</div>
+                  <div class="cc-actions">
+                    <button id="btnCopyDevice" class="btn pill">复制（Ctrl + C）</button>
+                    <button id="btnPasteDevice" class="btn pill">粘贴（Ctrl + V）</button>
+                  </div>
+                </section>
+
+                <section class="control-card">
+                  <div class="cc-card-title">剪贴板与输入</div>
+                  <div class="cc-actions input-row">
+                    <button id="btnClipboardPull" class="btn">从设备同步</button>
+                    <button id="btnClipboardPush" class="btn">同步至设备</button>
+                    <button id="btnClipboardPushPaste" class="btn">同步并粘贴</button>
+                  </div>
+                  <div class="cc-actions input-row">
+                    <input id="clipboardInput" placeholder="输入文本" />
+                    <button id="btnClipboardSet" class="btn">设定剪贴板</button>
+                  </div>
+                  <div class="cc-actions input-row">
+                    <input id="typeEnterInput" placeholder="输入文本后回车" />
+                    <button id="btnTypeEnter" class="btn primary">发送</button>
+                  </div>
+                </section>
+
+                <section class="control-card">
+                  <div class="cc-card-title">打开链接</div>
+                  <div class="cc-actions input-row">
+                    <input id="openUrlInput" placeholder="https://" />
+                    <button id="btnOpenUrl" class="btn primary">打开</button>
+                  </div>
+                </section>
+
+                <section class="control-card">
+                  <div class="cc-card-title">导航与系统</div>
+                  <div class="cc-actions">
+                    <button id="btnBack" class="btn">返回</button>
+                    <button id="btnHome" class="btn">主页</button>
+                    <button id="btnMenu" class="btn">菜单</button>
+                    <button id="btnVolDown" class="btn">音量-</button>
+                    <button id="btnVolUp" class="btn">音量+</button>
+                    <button id="btnScreenshot" class="btn primary">截图</button>
+                  </div>
+                </section>
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button id="btnBack" class="btn">返回</button>
+              <button id="btnHome" class="btn">主页</button>
+              <button id="btnMenu" class="btn">菜单</button>
+              <button id="btnVolDown" class="btn">音量-</button>
+              <button id="btnVolUp" class="btn">音量+</button>
+              <button id="btnScreenshot" class="btn primary">截图</button>
+            </div>
+          </div>
+          <!-- 退出：红色长条按钮，位于面板底部 -->
+          <div class="row" style="margin-top:12px;">
+            <button id="btnDisconnect" class="btn danger block">退出</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -277,18 +463,564 @@ function toggleTheme(){
   }
 }
 
-/* 加载设备信息 */
-async function loadDeviceInfo(){
+
+
+let socket = null;
+let jmuxer = null;
+let input = null;
+// 新增：统计帧与回退定时器
+let feedCount = 0;
+let fallbackTimer = null;
+
+// 新增：根据设备宽高比动态调整播放器宽度，减少左右黑边
+function adjustPhoneScreen(w, h){
   try{
-    const res=await fetch("/device_info");
-    const data=await res.json();
-    document.getElementById("deviceModel").textContent=
-      `${data.model} • ${data.resolution} • 🔋${data.battery}`;
-  }catch(e){
-    document.getElementById("deviceModel").textContent="Device not connected";
+    if(!w || !h) return;
+    const player = document.getElementById('player');
+    if(!player) return;
+    const heightPx = parseFloat(getComputedStyle(player).height) || 520;
+    const widthPx = Math.max(1, Math.round(heightPx * (w / h)));
+    player.style.width = widthPx + 'px';
+  }catch(e){ /* 忽略布局调整错误 */ }
+}
+function appendExecLog(msg){ addLog(msg,'agent'); }
+
+function updateFloatingInfo(){
+  const infoEl = document.getElementById('floatingInfo');
+  if(!infoEl) return;
+  infoEl.textContent = '设备信息加载中...';
+  Promise.all([
+    fetch('/api/model').then(r=>r.json()).catch(()=>({model:'-'})),
+    fetch('/api/resolution').then(r=>r.json()).catch(()=>({ok:false}))
+  ]).then(([m, r])=>{
+    const model = m?.model || '-';
+    const resText = r?.ok ? `${r.width}x${r.height}` : '-';
+    infoEl.textContent = `型号：${model}，分辨率：${resText}`;
+  }).catch(()=>{ infoEl.textContent = '设备信息不可用'; });
+}
+
+function toggleFloatingPanel(show){
+  const panel = document.getElementById('floatingPanel');
+  if (!panel) return;
+  panel.style.display = show ? 'block' : 'none';
+}
+
+function renderDeviceList(devices){
+  const box = document.getElementById('deviceList');
+  if(!box){return;}
+  if(!devices || devices.length===0){ box.innerHTML = '<div style="opacity:0.7">未发现设备，请检查 USB 或ADB。</div>'; return; }
+  const html = devices.map((d,idx)=>{
+    const info = `${d.serial}｜${d.model||'-'}｜${d.resolution||'-'}｜${d.state||'-'}`;
+    const serialAttr = (d.serial||'').replace(/"/g,'');
+    return `<div>
+      <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px dashed var(--border)">
+        <input type="radio" name="selDevice" value="${serialAttr}" ${idx===0?'checked':''} />
+        <span>${info}</span>
+      </label>
+    </div>`;
+  }).join('');
+  box.innerHTML = html;
+}
+// 新增：设备列表事件委托，修复未定义的 delegateDeviceList
+function delegateDeviceList(){
+  const box = document.getElementById('deviceList');
+  if(!box) return;
+  if(box.__delegated) return; // 防止重复绑定
+  box.__delegated = true;
+  // 监听设备单选切换，自动刷新设备信息
+  box.addEventListener('change', (e) => {
+    if(e.target && e.target.name === 'selDevice'){ refreshSelectedDeviceInfo(); }
+  });
+  // 移除设备项详情交互，设备信息统一在上方区块显示
+
+}
+async function fetchDevices(){
+  try{
+    const res = await fetch('/api/devices');
+    const data = await res.json();
+    if(data && data.ok){ renderDeviceList(data.devices||[]); refreshSelectedDeviceInfo(); }
+    else{ renderDeviceList([]); refreshSelectedDeviceInfo(); }
+  }catch(e){ console.error(e); renderDeviceList([]); refreshSelectedDeviceInfo(); }
+}
+function getSelectedSerial(){
+  const sel = document.querySelector('input[name="selDevice"]:checked');
+  return sel ? sel.value : null;
+}
+async function refreshSelectedDeviceInfo(){
+  const serial = getSelectedSerial();
+  const box = document.getElementById('deviceInfoKV');
+  if(!box) return;
+  if(!serial){ box.innerHTML = '<div style="opacity:0.7">未选择设备</div>'; return; }
+  box.innerHTML = '<div style="opacity:0.7">读取设备信息中…</div>';
+  try{
+    const res = await fetch('/api/device_info?serial=' + encodeURIComponent(serial));
+    const data = await res.json();
+    if(data && data.ok){ box.innerHTML = buildDeviceOverview(data); }
+    else{ box.innerHTML = '<div style="opacity:0.7">设备信息不可用</div>'; }
+  }catch(err){ box.innerHTML = '<div style="color:#e57373">读取失败：' + (err?.message||err) + '</div>'; }
+}
+async function takeScreenshot(){
+  try{
+    const serial = getSelectedSerial();
+    const url = serial ? `/api/screenshot?serial=${encodeURIComponent(serial)}` : '/api/screenshot';
+    const res = await fetch(url);
+    if(!res.ok){ throw new Error('截图接口返回错误'); }
+    const blob = await res.blob();
+    const imgUrl = URL.createObjectURL(blob);
+    window.open(imgUrl, '_blank');
+  }catch(e){ console.error(e); addLog('截图失败：'+(e?.message||e),'agent'); }
+}
+
+function initInput(width, height) {
+  const videoElement = document.getElementById('player');
+  function input_data_cb(data) { socket.emit('control_data', data); }
+  if (typeof ScrcpyInput !== 'undefined') {
+    input = new ScrcpyInput(input_data_cb, videoElement, width, height, false);
+
+    const backBtn = document.getElementById('btnBack');
+    const homeBtn = document.getElementById('btnHome');
+    const menuBtn = document.getElementById('btnMenu');
+    const volDownBtn = document.getElementById('btnVolDown');
+    const volUpBtn = document.getElementById('btnVolUp');
+
+    backBtn && backBtn.addEventListener('mousedown', (e)=>{ input.snedKeyCode(e, 0, 4); });
+    backBtn && backBtn.addEventListener('mouseup',   (e)=>{ input.snedKeyCode(e, 1, 4); });
+    homeBtn && homeBtn.addEventListener('mousedown', (e)=>{ input.snedKeyCode(e, 0, 3); });
+    homeBtn && homeBtn.addEventListener('mouseup',   (e)=>{ input.snedKeyCode(e, 1, 3); });
+    menuBtn && menuBtn.addEventListener('mousedown', (e)=>{ input.snedKeyCode(e, 0, 187); });
+    menuBtn && menuBtn.addEventListener('mouseup',   (e)=>{ input.snedKeyCode(e, 1, 187); });
+    volDownBtn && volDownBtn.addEventListener('mousedown', (e)=>{ input.snedKeyCode(e, 0, 25); });
+    volDownBtn && volDownBtn.addEventListener('mouseup',   (e)=>{ input.snedKeyCode(e, 1, 25); });
+    volUpBtn && volUpBtn.addEventListener('mousedown', (e)=>{ input.snedKeyCode(e, 0, 24); });
+    volUpBtn && volUpBtn.addEventListener('mouseup',   (e)=>{ input.snedKeyCode(e, 1, 24); });
+  } else {
+    // 没有 ScrcpyInput 库时，使用后端 ADB 回退
+    const backBtn = document.getElementById('btnBack');
+    const homeBtn = document.getElementById('btnHome');
+    const menuBtn = document.getElementById('btnMenu');
+    const volDownBtn = document.getElementById('btnVolDown');
+    const volUpBtn = document.getElementById('btnVolUp');
+    backBtn && (backBtn.onclick = ()=>sendKeyEvent(4));
+    homeBtn && (homeBtn.onclick = ()=>sendKeyEvent(3));
+    menuBtn && (menuBtn.onclick = ()=>sendKeyEvent(82));
+    volDownBtn && (volDownBtn.onclick = ()=>sendKeyEvent(25));
+    volUpBtn && (volUpBtn.onclick = ()=>sendKeyEvent(24));
   }
 }
-window.addEventListener("load",loadDeviceInfo);
+
+// 兼容：若未能加载 web-scrcpy 的解析器与输入库，则提供简化实现
+if (typeof VideoParser === 'undefined') {
+  class SimpleVideoParser {
+    constructor(cb){ this.cb = cb; this.buffer = new Uint8Array(0); this.sps=null; this.pps=null; }
+    appendData(chunk){
+      // 连接缓冲
+      const merged = new Uint8Array(this.buffer.length + chunk.length);
+      merged.set(this.buffer,0); merged.set(chunk,this.buffer.length);
+      this.buffer = merged;
+      // 查找起始码 00 00 01 或 00 00 00 01
+      const starts = [];
+      for(let i=0;i<this.buffer.length-4;i++){
+        if(this.buffer[i]===0 && this.buffer[i+1]===0){
+          if(this.buffer[i+2]===1){ starts.push(i+3); i+=2; }
+          else if(this.buffer[i+2]===0 && this.buffer[i+3]===1){ starts.push(i+4); i+=3; }
+        }
+      }
+      if(starts.length===0) return; // 等待更多数据
+      // 构造片段
+      const segments=[];
+      for(let i=0;i<starts.length;i++){
+        const start=starts[i];
+        const end=i+1<starts.length?starts[i+1]:this.buffer.length;
+        const seg=this.buffer.slice(start,end);
+        if(seg.length>0) segments.push(seg);
+      }
+      // 保留最后未完整的尾部数据
+      const lastStart=starts[starts.length-1];
+      this.buffer = this.buffer.slice(lastStart);
+      // 发送 NALU
+      for(const seg of segments){
+        const nalType = seg[0] & 0x1f;
+        if(nalType===7){ this.sps = seg; }
+        else if(nalType===8){ this.pps = seg; }
+        // 首次提供 SPS/PPS
+        if(this.sps && this.pps && !this._inited){
+          this._inited = true;
+          this.cb({ type:'init', data:{ sps:this.sps, pps:this.pps } });
+        }
+        this.cb({ type:'nalu', data: seg });
+      }
+    }
+  }
+  window.VideoParser = SimpleVideoParser;
+}
+
+// 后端 ADB 按键回退（无 ScrcpyInput 时使用）
+async function sendKeyEvent(code){
+  try{
+    const res = await fetch('/api/shell',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ cmd: `input keyevent ${code}` })
+    });
+    const data = await res.json();
+    if(!data.ok) throw new Error('后端执行失败');
+    addLog(`已发送按键 ${code}`,'agent');
+  }catch(e){
+    addLog(`按键失败 ${code}: ${e?.message||e}`,'agent');
+  }
+}
+
+let parser = null;
+
+// 新增：MJPEG 回退逻辑（与 connect 一致）
+function startMjpegFallback(){
+  const videoElement = document.getElementById('player');
+  const mjpegEl = document.getElementById('mjpeg');
+  addLog('未收到视频帧，启用 MJPEG 回退显示…','agent');
+  if (videoElement) videoElement.style.display = 'none';
+  if (mjpegEl){ mjpegEl.style.display = 'block'; mjpegEl.src = '/stream'; }
+}
+
+function startPreview(){
+  const videoElement = document.getElementById('player');
+  const mjpegEl = document.getElementById('mjpeg');
+  const overlay = document.getElementById('connectOverlay');
+  if (!videoElement) return;
+
+  // 清理旧连接与定时器
+  try{ socket && socket.disconnect(); }catch{}
+  feedCount = 0;
+  if (fallbackTimer){ clearTimeout(fallbackTimer); fallbackTimer = null; }
+  if (mjpegEl){ mjpegEl.style.display = 'none'; if (mjpegEl.src) mjpegEl.src = ''; }
+  videoElement.style.display = 'block';
+
+  // 构建解析器
+  if (typeof VideoParser === 'undefined') { addLog('VideoParser 未加载，请检查 /ws-assets/js/ 引入','agent'); return; }
+  parser = new VideoParser(({ type, data }) => {
+    if (type === 'nalu') {
+      jmuxer && jmuxer.feed({ video: data });
+    } else if (type === 'init') {
+      jmuxer && jmuxer.feed({ video: data["sps"] });
+      jmuxer && jmuxer.feed({ video: data["pps"] });
+      addLog('收到 SPS/PPS，初始化完成','agent');
+    } else if (type === 'screen_size') {
+      initInput(data["width"], data["height"]);
+      adjustPhoneScreen(data["width"], data["height"]);
+    } else if (type === 'size_change') {
+      if (input) { input.resizeScreen(data["width"], data["height"]); }
+      adjustPhoneScreen(data["width"], data["height"]);
+    }
+  });
+
+  if (typeof JMuxer === 'undefined') { addLog('JMuxer 未加载，请检查脚本引入','agent'); return; }
+  jmuxer = new JMuxer({
+    node: 'player', mode: 'video', fps: 60, flushingTime: 0, clearBuffer: true,
+    onReady: () => {
+      addLog('MSE 就绪，等待视频数据…','agent');
+      videoElement.controls = false;
+      videoElement.muted = true;
+      videoElement.autoplay = true;
+      videoElement.playsInline = true;
+      try { videoElement.play(); } catch(e) { addLog('自动播放被阻止: ' + (e?.message||e),'agent'); }
+      // 启动超时回退：1.5s 未收到帧则切换到 MJPEG
+      fallbackTimer = setTimeout(() => { if (feedCount === 0) startMjpegFallback(); }, 1500);
+    },
+    onError: (err) => { addLog('MSE 错误：' + err.message,'agent'); }
+  });
+
+  socket = io({ reconnection: false, autoConnect: true });
+
+  socket.on('video_data', async (data) => {
+    try{
+      let bytes = null;
+      if (data instanceof ArrayBuffer) {
+        bytes = new Uint8Array(data);
+      } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
+        const buf = await data.arrayBuffer();
+        bytes = new Uint8Array(buf);
+      } else if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView && ArrayBuffer.isView(data)) {
+        // TypedArray 或 DataView：尊重 byteOffset/byteLength
+        bytes = new Uint8Array(data.buffer, data.byteOffset || 0, data.byteLength || data.length || 0);
+      } else if (data && data.buffer instanceof ArrayBuffer && typeof data.byteLength === 'number') {
+        // Buffer-like 对象
+        const offset = data.byteOffset || 0;
+        const len = data.byteLength;
+        bytes = new Uint8Array(data.buffer, offset, len);
+      } else if (typeof data === 'string') {
+        // 极端兼容：字符串（不期望发生）
+        try {
+          const bin = atob(data);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          bytes = arr;
+        } catch(e) {}
+      }
+      if (!bytes) { addLog('收到未知类型视频块：' + Object.prototype.toString.call(data),'agent'); return; }
+      feedCount += 1;
+      parser && parser.appendData(bytes);
+    }catch(err){ addLog('处理视频块失败：' + (err?.message||err),'agent'); }
+  });
+
+  // 已移除服务器发送统计的调试日志，避免干扰界面
+
+  socket.on('connect', () => {
+    addLog('Socket 已连接，开始接收视频…','agent');
+    if (overlay) overlay.style.display = 'none';
+    const panel = document.getElementById('floatingPanel'); if (panel) panel.style.display = 'none';
+    const headerControl = document.getElementById('headerControl');
+    if (headerControl) { headerControl.textContent = '控制面板'; headerControl.disabled = false; }
+  });
+
+  socket.on('disconnect', () => {
+    addLog('Socket 已断开','agent');
+    if (fallbackTimer){ clearTimeout(fallbackTimer); fallbackTimer = null; }
+    if (overlay) overlay.style.display = 'flex';
+    const panel = document.getElementById('floatingPanel'); if (panel) panel.style.display = 'none';
+    const headerControl = document.getElementById('headerControl'); if (headerControl) { headerControl.textContent = '设备离线'; headerControl.disabled = true; }
+    if (mjpegEl){ mjpegEl.style.display = 'none'; if (mjpegEl.src) mjpegEl.src = ''; }
+  });
+
+  socket.on('error', (error) => { addLog('WebSocket 错误：' + (error?.message || error),'agent'); });
+
+  window.addEventListener('beforeunload', () => { socket && socket.disconnect(); });
+}
+
+function stopPreview(){
+  try{
+    socket && socket.disconnect();
+  }catch{}
+  try{
+    if (jmuxer && typeof jmuxer.destroy === 'function') jmuxer.destroy();
+  }catch{}
+  jmuxer = null;
+  const overlay = document.getElementById('connectOverlay');
+  if (overlay) overlay.style.display = 'flex';
+  toggleFloatingPanel(false);
+  const headerControl = document.getElementById('headerControl');
+  if (headerControl) { headerControl.textContent = '设备离线'; headerControl.disabled = true; }
+  addLog('停止预览','agent');
+}
+
+function wireControls(){
+  const byId = id => document.getElementById(id);
+  const connectBtn = byId('btnConnect');
+  const phoneFrame = byId('phoneFrame');
+  const disconnectBtn = byId('btnDisconnect');
+
+  if(connectBtn) connectBtn.onclick = startPreview;
+  // 顶部左侧控件：未连接显示“设备离线”，连接显示“控制面板”可打开
+  const headerControl = byId('headerControl');
+  if(headerControl) headerControl.onclick = () => {
+    if (socket && socket.connected) { fetchDevices(); delegateDeviceList(); toggleFloatingPanel(true); refreshSelectedDeviceInfo(); }
+    else { addLog('设备离线，无法打开控制中心','agent'); }
+  };
+  // 控制中心左上角关闭叉
+  const btnClosePanel = byId('btnClosePanel');
+  if(btnClosePanel) btnClosePanel.onclick = () => { toggleFloatingPanel(false); };
+  const btnRefreshDevices = document.getElementById('btnRefreshDevices');
+  btnRefreshDevices && (btnRefreshDevices.onclick = fetchDevices);
+  const btnScreenshot = document.getElementById('btnScreenshot');
+  btnScreenshot && (btnScreenshot.onclick = takeScreenshot);
+  const btnRefreshInfo = byId('btnRefreshInfo');
+  btnRefreshInfo && (btnRefreshInfo.onclick = refreshSelectedDeviceInfo);
+  // 快捷操作事件绑定
+  const serialGetter = () => getSelectedSerial();
+  const btnCopyDevice = byId('btnCopyDevice');
+  const btnPasteDevice = byId('btnPasteDevice');
+  const btnClipboardPull = byId('btnClipboardPull');
+  const btnClipboardPush = byId('btnClipboardPush');
+  const btnClipboardPushPaste = byId('btnClipboardPushPaste');
+  const btnClipboardSet = byId('btnClipboardSet');
+  const clipboardInput = byId('clipboardInput');
+  const typeEnterInput = byId('typeEnterInput');
+  const btnTypeEnter = byId('btnTypeEnter');
+  const openUrlInput = byId('openUrlInput');
+  const btnOpenUrl = byId('btnOpenUrl');
+  const ccSerialEl = byId('ccSerial');
+  if(ccSerialEl){ ccSerialEl.textContent = getSelectedSerial() || '-'; }
+ 
+  btnCopyDevice && (btnCopyDevice.onclick = () => sendKeyEvent(278)); // KEYCODE_COPY
+  btnPasteDevice && (btnPasteDevice.onclick = () => sendKeyEvent(279)); // KEYCODE_PASTE
+
+  btnClipboardPull && (btnClipboardPull.onclick = async () => {
+    const serial = serialGetter();
+    if(!serial){ addLog('未选择设备','agent'); return; }
+    try{
+      const res = await fetch('/api/clipboard?serial=' + encodeURIComponent(serial));
+      const data = await res.json();
+      if(data && data.ok){
+        try{ await navigator.clipboard.writeText(data.text || ''); addLog('已同步设备剪贴板到本地','agent'); }
+        catch(e){ addLog('写入本地剪贴板失败：'+(e?.message||e),'agent'); }
+      } else {
+        addLog('读取设备剪贴板失败','agent');
+      }
+    }catch(e){ addLog('同步失败：'+(e?.message||e),'agent'); }
+  });
+
+  btnClipboardPush && (btnClipboardPush.onclick = async () => {
+    const serial = serialGetter();
+    if(!serial){ addLog('未选择设备','agent'); return; }
+    try{
+      const text = await navigator.clipboard.readText();
+      const res = await fetch('/api/clipboard', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ serial, text }) });
+      const data = await res.json();
+      if(data && data.ok){ addLog('已将本地剪贴板同步到设备','agent'); }
+      else { addLog('同步到设备失败','agent'); }
+    }catch(e){ addLog('同步失败：'+(e?.message||e),'agent'); }
+  });
+
+  btnClipboardPushPaste && (btnClipboardPushPaste.onclick = async () => {
+    const serial = serialGetter();
+    if(!serial){ addLog('未选择设备','agent'); return; }
+    try{
+      const text = await navigator.clipboard.readText();
+      const res = await fetch('/api/clipboard', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ serial, text }) });
+      const data = await res.json();
+      if(data && data.ok){ sendKeyEvent(279); addLog('已同步并触发粘贴','agent'); }
+      else { addLog('同步到设备失败','agent'); }
+    }catch(e){ addLog('同步失败：'+(e?.message||e),'agent'); }
+  });
+
+  btnClipboardSet && (btnClipboardSet.onclick = async () => {
+    const serial = serialGetter();
+    if(!serial){ addLog('未选择设备','agent'); return; }
+    const text = (clipboardInput?.value || '').trim();
+    try{
+      const res = await fetch('/api/clipboard', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ serial, text }) });
+      const data = await res.json();
+      if(data && data.ok){ addLog('已设置设备剪贴板','agent'); }
+      else { addLog('设置设备剪贴板失败','agent'); }
+    }catch(e){ addLog('设置失败：'+(e?.message||e),'agent'); }
+  });
+
+  btnTypeEnter && (btnTypeEnter.onclick = async () => {
+    const text = (typeEnterInput?.value || '').trim();
+    if(!text){ addLog('请输入要发送的文本','agent'); return; }
+    const safe = text.replace(/%/g,'%25').replace(/\s/g,'%s').replace(/\n/g,'\\n');
+    try{
+      await fetch('/api/shell', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cmd: `input text ${safe}` }) });
+      await sendKeyEvent(66); // ENTER
+      addLog('已输入文本并按回车','agent');
+    }catch(e){ addLog('输入失败：'+(e?.message||e),'agent'); }
+  });
+
+  btnOpenUrl && (btnOpenUrl.onclick = async () => {
+    const serial = serialGetter();
+    if(!serial){ addLog('未选择设备','agent'); return; }
+    const url = (openUrlInput?.value || '').trim();
+    if(!url){ addLog('请输入要打开的链接','agent'); return; }
+    try{
+      const res = await fetch('/api/open_url', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ serial, url }) });
+      const data = await res.json();
+      if(data && data.ok){ addLog('已在设备中打开链接','agent'); }
+      else { addLog('打开链接失败','agent'); }
+    }catch(e){ addLog('打开失败：'+(e?.message||e),'agent'); }
+  });
+  if(disconnectBtn) disconnectBtn.onclick = stopPreview;
+}
+
+window.addEventListener('load', wireControls);
+
+function buildDeviceKV(info){
+  function fmtUptime(sec){
+    if(sec==null) return '-';
+    const s = Math.floor(sec);
+    const d = Math.floor(s/86400);
+    const h = Math.floor((s%86400)/3600);
+    const m = Math.floor((s%3600)/60);
+    return `${d>0?d+'天 ':''}${h}小时 ${m}分`;
+  }
+  const tempC = (info?.battery?.temperature!=null) ? (info.battery.temperature/10).toFixed(1)+ '°C' : '-';
+  const memTotal = (info?.memory?.total_kb!=null) ? Math.round(info.memory.total_kb/1024)+' MB' : '-';
+  const memAvail = (info?.memory?.available_kb!=null) ? Math.round(info.memory.available_kb/1024)+' MB' : '-';
+  const entries = [
+    ['序列号', info.serial_prop || info.serial],
+    ['型号', info.model],
+    ['品牌', info.brand],
+    ['制造商', info.manufacturer],
+    ['设备名', info.device],
+    ['产品名', info.product],
+    ['Android版本', info.android],
+    ['SDK', info.sdk],
+    ['构建ID', info.build_id],
+    ['增量版本', info.incremental],
+    ['安全补丁', info.security_patch],
+    ['指纹', info.fingerprint],
+    ['CPU ABI', info.abi_list],
+    ['硬件', info.hardware],
+    ['平台', info.platform],
+    ['分辨率', info.resolution],
+    ['密度', info.density!=null ? info.density + ' dpi' : '-'],
+    ['旋转', info.rotation!=null ? info.rotation : '-'],
+    ['电池电量', info?.battery?.level!=null ? info.battery.level + '%' : '-'],
+    ['电池状态', info?.battery?.status || '-'],
+    ['电池温度', tempC],
+    ['电池健康', info?.battery?.health || '-'],
+    ['IP地址', info.ip],
+    ['MAC地址', info.mac],
+    ['存储总量', info?.storage?.size || '-'],
+    ['已用', info?.storage?.used || '-'],
+    ['可用', info?.storage?.avail || '-'],
+    ['内存总量', memTotal],
+    ['可用内存', memAvail],
+    ['运行时长', fmtUptime(info?.uptime_seconds)],
+  ];
+  const rows = entries.map(([k,v])=>`<div class="kv-item-label">${k}</div><div class="kv-item-value">${(v??'-')}</div>`).join('');
+  return `<div class="kv-list">${rows}</div>`;
+}
+function buildDeviceOverview(info){
+  function codename(ver){
+    const map={ '14':'UpsideDownCake','13':'Tiramisu','12':'Snow Cone','11':'R','10':'Q' };
+    return map[String(ver)]||'';
+  }
+  function fmtUptime(sec){
+    if(sec==null) return '-';
+    const s = Math.floor(sec);
+    const d = Math.floor(s/86400);
+    const h = Math.floor((s%86400)/3600);
+    const m = Math.floor((s%3600)/60);
+    return `${d>0?d+'天 ':''}${h}小时 ${m}分`;
+  }
+  const tempC = (info?.battery?.temperature!=null) ? (info.battery.temperature/10).toFixed(1)+ '°C' : '-';
+  const memTotal = (info?.memory?.total_kb!=null) ? Math.round(info.memory.total_kb/1024)+' MB' : '-';
+  const memAvail = (info?.memory?.available_kb!=null) ? Math.round(info.memory.available_kb/1024)+' MB' : '-';
+  const batteryPct = info?.battery?.level!=null ? `${info.battery.level}%` : '-';
+  const batteryStatus = info?.battery?.status ? `（${info.battery.status}）` : '';
+  const androidCodename = codename(info?.android);
+  const items = [
+    {label:'制造商', icon:'ⓘ', value: info.manufacturer || '-'},
+    {label:'型号', icon:'ⓘ', value: info.model || '-'},
+    {label:'品牌', icon:'🏷️', value: info.brand || '-'},
+    {label:'设备名', icon:'📱', value: info.device || '-'},
+    {label:'产品名', icon:'🧩', value: info.product || '-'},
+    {label:'Android版本', icon:'🤖', value: `${info.android || '-'}${androidCodename? ' ('+androidCodename+')':''}`},
+    {label:'SDK', icon:'⚙️', value: info.sdk || '-'},
+    {label:'构建ID', icon:'🔧', value: info.build_id || '-'},
+    {label:'增量版本', icon:'🔧', value: info.incremental || '-'},
+    {label:'安全补丁', icon:'🛡️', value: info.security_patch || '-'},
+    {label:'指纹', icon:'🔎', value: info.fingerprint || '-'},
+    {label:'CPU ABI', icon:'🖥️', value: info.abi_list || '-'},
+    {label:'硬件', icon:'🔩', value: info.hardware || '-'},
+    {label:'平台', icon:'🧱', value: info.platform || '-'},
+    {label:'序列号', icon:'#', value: info.serial_prop || info.serial || '-'},
+    {label:'分辨率', icon:'🖼️', value: info.resolution || '-'},
+    {label:'密度', icon:'🖨️', value: (info.density!=null ? info.density + ' dpi' : '-')},
+    {label:'旋转', icon:'↻', value: (info.rotation!=null ? info.rotation : '-')},
+    {label:'IP地址', icon:'🌐', value: info.ip || '-'},
+    {label:'MAC地址', icon:'🪪', value: info.mac || '-'},
+    {label:'电池电量', icon:'🔋', value: `${batteryPct} ${batteryStatus}`.trim()},
+    {label:'电池温度', icon:'🌡️', value: tempC},
+    {label:'电池健康', icon:'❤️', value: (info?.battery?.health || '-')},
+    {label:'存储总量', icon:'💾', value: info?.storage?.size || '-'},
+    {label:'已用', icon:'💾', value: info?.storage?.used || '-'},
+    {label:'可用', icon:'💾', value: info?.storage?.avail || '-'},
+    {label:'内存总量', icon:'🧠', value: memTotal},
+    {label:'可用内存', icon:'🧠', value: memAvail},
+    {label:'运行时长', icon:'⏱️', value: fmtUptime(info?.uptime_seconds)},
+  ];
+  const rows = items.map(it=>`<div class=\"ov-item\"><div class=\"ov-label\">${it.icon} ${it.label}</div><div class=\"ov-value\">${it.value ?? '-'}</div></div>`).join('');
+  // 返回单一容器中的双列网格，不再包含“概览”标题或内层卡片
+  return `<div class=\"ov-grid\">${rows}</div>`;
+}
 </script>
 </body>
 </html>

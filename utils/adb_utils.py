@@ -1,6 +1,6 @@
 import subprocess
 import time
-import re
+import os
 
 
 def run_adb(cmd: str):
@@ -13,63 +13,77 @@ def run_adb(cmd: str):
     except Exception as e:
         return f"ADB 执行出错: {e}"
 
-SCRCPY_PATH = "/opt/homebrew/bin/scrcpy"
 FFMPEG_PATH = "/opt/homebrew/bin/ffmpeg"
 
 
-def start_scrcpy_usb_tcp():
-    """启动 scrcpy USB 模式 + 本地 TCP 输出"""
-    subprocess.run("pkill -f scrcpy", shell=True)
-    time.sleep(0.5)
+def start_screenrecord_raw():
+    """通过 adb exec-out 启动 screenrecord，输出原始 H.264 到 stdout"""
+    # 结束可能残留的 screenrecord
+    subprocess.run("pkill -f screenrecord", shell=True)
+    time.sleep(0.3)
 
     cmd = [
-        SCRCPY_PATH,
-        "--no-playback",
-        "--serial", "usb",
-        "--video-bit-rate", "4M",
-        "--max-fps", "30",
-        "--tcp-listen", "127.0.0.1:8083",
-        "--raw"
+        "adb", "exec-out",
+        "screenrecord",
+        "--output-format=h264",
+        "--bit-rate", "4000000",
+        "-"  # 输出到 stdout
     ]
-
-    print("🎬 启动 scrcpy TCP 输出 (USB 模式):", " ".join(cmd))
-    return subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    print("🎬 启动 screenrecord 原始视频输出:", " ".join(cmd))
+    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def screen_stream_generator():
-    """从 scrcpy TCP 输出读取 H.264 视频流并转 MJPEG (multipart/x-mixed-replace)"""
-    scrcpy_proc = start_scrcpy_usb_tcp()
-    time.sleep(2)
+    """读取 H.264 并用 ffmpeg 转 MJPEG（multipart/x-mixed-replace）"""
+    sr_proc = start_screenrecord_raw()
+    time.sleep(0.5)
 
+    ffmpeg_bin = FFMPEG_PATH if os.path.exists(FFMPEG_PATH) else "ffmpeg"
     ffmpeg_cmd = [
-        FFMPEG_PATH,
+        ffmpeg_bin,
         "-f", "h264",
-        "-i", "tcp://127.0.0.1:8083",
+        "-i", "pipe:0",
         "-vf", "scale=540:-1",
         "-f", "mjpeg",
         "-q:v", "5",
         "pipe:1"
     ]
+    print("🎥 启动 ffmpeg 转码 stdin(h264) → MJPEG")
+    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=sr_proc.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    print("🎥 启动 ffmpeg 转码 tcp://127.0.0.1:8083 → MJPEG")
-    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    buffer = bytearray()
+    SOI = b"\xff\xd8"
+    EOI = b"\xff\xd9"
 
     try:
         while True:
-            frame = ffmpeg_proc.stdout.read(4096)
-            if not frame:
+            chunk = ffmpeg_proc.stdout.read(16384)
+            if not chunk:
                 break
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+            buffer.extend(chunk)
+
+            while True:
+                soi = buffer.find(SOI)
+                if soi == -1:
+                    if len(buffer) > 1_000_000:
+                        buffer[:] = buffer[-2048:]
+                    break
+                eoi = buffer.find(EOI, soi + 2)
+                if eoi == -1:
+                    break
+                frame = bytes(buffer[soi:eoi + 2])
+                del buffer[:eoi + 2]
+
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
     finally:
-        # 清理子进程
         try:
             if ffmpeg_proc and ffmpeg_proc.poll() is None:
                 ffmpeg_proc.kill()
         except Exception:
             pass
         try:
-            if scrcpy_proc and scrcpy_proc.poll() is None:
-                scrcpy_proc.kill()
+            if sr_proc and sr_proc.poll() is None:
+                sr_proc.kill()
         except Exception:
             pass
