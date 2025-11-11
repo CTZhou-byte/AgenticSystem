@@ -30,17 +30,21 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
   padding-bottom:var(--safe-gutter);
 }
 
-/* 主区布局：上两列（手机、轨迹）+ 下整行（日志） */
+/* 主区布局：左（手机）中（轨迹/日志）右（聊天） */
 .main-console{
   display:grid;
-  grid-template-columns:280px 1fr;
-  grid-template-rows:auto 240px;
-  gap:24px;
-  align-items:start;
+  grid-template-columns:280px 1fr 360px;
+  grid-template-rows:auto auto;
+  column-gap:16px; row-gap:16px;
+  align-items:stretch;
   grid-template-areas:
-    "phone traj"
-    "logs logs";
+    "phone traj chat"
+    "logs logs chat";
 }
+.phone-container{ grid-area:phone; }
+.traj-panel{ grid-area:traj; }
+.logs-container{ grid-area:logs; }
+#chat{ grid-area:chat; }
 
 /* 左侧手机区域 */
 .phone-container{
@@ -66,7 +70,10 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
 /* 手机浮动面板 */
 .floating-panel{
   position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:760px;height:620px;overflow:auto;
+  width:min(760px, calc(100vw - 48px));
+  height:min(620px, calc(100vh - 48px));
+  overflow:auto;
+  z-index:90;
   background:rgba(24,24,28,0.6);
   border:1px solid rgba(255,255,255,0.18);
   border-radius:14px;
@@ -216,7 +223,7 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
 /* 聊天框 */
 #chat{
   position:fixed;
-  top:80px;
+  top:0px;
   right:var(--safe-gutter);
   bottom:var(--safe-gutter);
   width:var(--chat-width);
@@ -247,6 +254,85 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
 .control-bar .btn{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer}
 .control-bar .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .control-bar .btn:disabled{opacity:0.6;cursor:not-allowed}
+/* 苹果风格头部链接样式 */
+.apple-nav { display:flex; align-items:center; gap:16px; }
+.apple-link { background:none; border:none; color:inherit; cursor:pointer; font-size:14px; line-height:28px; padding:0; opacity:0.9; transition:opacity .2s ease, color .2s ease; }
+.apple-link:hover { opacity:1; }
+.apple-link:active { opacity:0.8; }
+.apple-link[disabled] { opacity:0.45; cursor:default; pointer-events:none; }
+.apple-status { display:flex; align-items:center; gap:8px; }
+.status-dot { width:8px; height:8px; border-radius:50%; background:#8e8e93; box-shadow:0 0 0 1px rgba(0,0,0,0.1) inset; }
+.status-dot.online { background:#34C759; }
+.status-dot.offline { background:#8e8e93; }
+/* 头部对齐优化 */
+header h1 { font-weight:600; letter-spacing:0.2px; }
+/* Mac 风格控制中心样式 */
+.floating-panel.mac-panel{
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  background: rgba(255,255,255,0.06);
+  border:1px solid var(--border);
+  border-radius:12px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.35);
+  padding:12px;
+  /* 保持基于视口居中，再叠加开合位移 */
+  opacity:0; transform:translate(-50%, -50%) translateY(-6px);
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+}
+.floating-panel.mac-panel.is-open{ opacity:1; transform:translate(-50%, -50%) translateY(0); pointer-events:auto; }
+.floating-panel.mac-panel.hidden{ opacity:0; transform:translate(-50%, -50%) translateY(-6px); pointer-events:none; }
+.mac-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.mac-title{ font-weight:600; letter-spacing:.2px; }
+.mac-icon-btn{ background:none; border:none; color:inherit; cursor:pointer; font-size:16px; line-height:28px; padding:0; opacity:.9; }
+.mac-icon-btn:hover{ opacity:1; }
+.mac-section{ margin-bottom:12px; }
+.mac-section-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.mac-section-title{ color:var(--accent); }
+.mac-actions{ display:flex; align-items:center; gap:8px; }
+.mac-btn{ background:none; border:none; color:inherit; cursor:pointer; font-size:13px; padding:2px 4px; opacity:.9; }
+.mac-btn:hover{ opacity:1; }
+.mac-btn.primary{ color:#fff; background:var(--accent); border-radius:8px; padding:6px 10px; }
+.mac-list{ max-height:180px; overflow:auto; border:1px solid var(--border); border-radius:10px; padding:8px; }
+.mac-list-item{ display:flex; align-items:center; gap:8px; padding:6px 4px; border-bottom:1px solid rgba(255,255,255,0.12); }
+.mac-actions-bar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+/* 全局高端视觉优化 */
+html, body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Helvetica Neue', Arial, sans-serif; }
+body { letter-spacing: 0.2px; }
+body::before{ content:""; position:fixed; inset:0; pointer-events:none; background: radial-gradient(600px 300px at 50% -100px, rgba(80,120,255,.18), transparent 60%), radial-gradient(800px 360px at 10% 20%, rgba(255,140,100,.08), transparent 62%); z-index:-1; }
+.stage { width: 100%; max-width: none; margin: 0; padding: 12px 16px; }
+/* 轨迹面板 */
+.traj-panel { backdrop-filter: saturate(180%) blur(12px); -webkit-backdrop-filter: saturate(180%) blur(12px); background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 14px; padding: 12px; }
+.traj-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.traj-header b { font-weight:600; color: var(--accent); }
+.traj-header button { background:none; border:none; color:inherit; cursor:pointer; font-size:13px; opacity:.85; }
+.traj-header button:hover { opacity:1; }
+.traj-grid { display:grid; grid-template-columns:1fr; gap:8px; }
+.traj-item { padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); }
+.traj-desc { opacity:.8; font-size:12px; }
+.traj-card{ display:flex; flex-direction:column; gap:6px; }
+.traj-thumb{ width:100%; border:1px solid rgba(255,255,255,0.10); border-radius:10px; background:#111; aspect-ratio:9/16; object-fit:cover; }
+.traj-meta{ display:flex; align-items:center; justify-content:space-between; font-size:12px; opacity:.85; }
+.traj-meta .action{ color: var(--accent); }
+/* 日志面板 */
+.logs-container { backdrop-filter: saturate(180%) blur(8px); -webkit-backdrop-filter: saturate(180%) blur(8px); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
+.logs-container h3 { margin:0 0 8px 0; font-weight:600; color: var(--accent); letter-spacing:.2px; }
+#logArea { max-height: 220px; overflow:auto; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size:12px; line-height:1.6; }
+.log-entry { padding:4px 6px; border-bottom:1px solid rgba(255,255,255,0.08); }
+/* 聊天面板 */
+#chat { backdrop-filter: saturate(180%) blur(8px); -webkit-backdrop-filter: saturate(180%) blur(8px); background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 14px; padding: 10px; position:relative; z-index:100; height:100%; display:flex; flex-direction:column; }
+#chat-messages { flex:1; overflow:auto; }
+#chat-input { display:flex; gap:8px; margin-top:10px; border-top:1px solid var(--border); padding-top:8px; }
+#chat-messages .bubble { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 8px 10px; }
+#chat-input { display:flex; gap:8px; margin-top:10px; }
+#chat-input input { flex:1; border:1px solid var(--border); border-radius:8px; background: var(--panel); color: var(--text); padding:8px 10px; }
+#chat-input button { background: var(--accent); color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer; }
+#chat-input button:hover { filter: brightness(1.08); }
+/* 手机预览高级质感增强 */
+.phone-frame::before{ content:""; position:absolute; inset:-20px; background:radial-gradient(120px 120px at 50% 20%, rgba(79,119,255,.45), transparent 60%), radial-gradient(160px 160px at 10% 80%, rgba(255,120,90,.3), transparent 60%); filter: blur(40px); opacity:.35; z-index:-1; }
+.phone-screen{ border:1px solid rgba(255,255,255,0.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 30px 60px rgba(0,0,0,0.35); }
+.phone-overlay .btn{ box-shadow: 0 10px 20px rgba(37,99,235,0.25); }
 </style><!-- 引入 web-scrcpy 客户端资源（与 connect 保持一致） -->
     <script src="/static/js/socket.io.js"></script>
     <script src="/static/js/input.js?v=3"></script>
@@ -259,11 +345,13 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
 <body>
 <header>
   <h1>🧠 Cognitive OS Agent</h1>
-  <div style="display:flex;align-items:center;gap:16px;">
-    <!-- 替换下拉框为“模型加载”按钮（与主题切换一致的无边框样式） -->
-    <button id="modelLoadBtn" class="btn" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;">🧩 模型加载</button>
-    <button id="headerControl" class="btn" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;" disabled>设备离线</button>
-    <button id="themeToggle" onclick="toggleTheme()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;">🌓 Theme</button>
+  <div class="apple-nav">
+    <button id="modelLoadBtn" class="apple-link">模型加载</button>
+    <button id="headerControl" class="apple-link apple-status" disabled>
+      <span class="status-dot offline"></span>
+      <span class="status-text">设备离线</span>
+    </button>
+    <button id="themeToggle" onclick="toggleTheme()" class="apple-link">主题</button>
   </div>
 </header>
 
@@ -278,38 +366,36 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
         <div class="phone-overlay" id="connectOverlay">
            <button id="btnConnect" class="btn">连接并预览</button>
          </div>
-        <div class="floating-panel" id="floatingPanel" style="display:none">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <h4>控制中心</h4>
-            <button id="btnClosePanel" class="btn" aria-label="关闭控制中心" style="padding:4px 8px">✕</button>
+        <div class="floating-panel mac-panel" id="floatingPanel" style="display:none">
+          <div class="mac-header">
+            <h4 class="mac-title">控制中心</h4>
+            <button id="btnClosePanel" class="mac-icon-btn" aria-label="关闭控制中心">✕</button>
           </div>
-          <div id="devicesSection" style="margin-bottom:12px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <b style="color:var(--accent);">设备列表</b>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <button id="btnRefreshDevices" class="btn">刷新设备</button>
+          <div id="devicesSection" class="mac-section">
+            <div class="mac-section-header">
+              <b class="mac-section-title">设备列表</b>
+              <div class="mac-actions">
+                <button id="btnRefreshDevices" class="mac-btn">刷新设备</button>
               </div>
             </div>
-            <div id="deviceList" style="max-height:180px;overflow:auto;border:1px dashed var(--border);border-radius:8px;padding:8px"></div>
+            <div id="deviceList" class="mac-list"></div>
           </div>
-          <div id="deviceInfoSection" style="margin:10px 0 12px 0;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <b style="color:var(--accent);">设备信息</b>
-              <div style="display:flex;gap:8px;align-items:center;"><button id="btnRefreshInfo" class="btn">刷新信息</button></div>
+          <div id="deviceInfoSection" class="mac-section">
+            <div class="mac-section-header">
+              <b class="mac-section-title">设备信息</b>
+              <div class="mac-actions"><button id="btnRefreshInfo" class="mac-btn">刷新信息</button></div>
             </div>
-            <div id="deviceInfoKV" class="details" style="margin:6px 0 8px 0;padding:10px;border:1px solid rgba(255,255,255,0.14);border-radius:10px;background:rgba(255,255,255,0.04)"></div>
+            <div id="deviceInfoKV" class="mac-card details"></div>
            </div>
-           <!-- 回滚：移除控制中心复杂卡片，保留单行导航按钮 -->
-           <div class="row" style="margin-top:10px;">
-           <button id="btnBack" class="btn">返回</button>
-           <button id="btnHome" class="btn">主页</button>
-           <button id="btnMenu" class="btn">菜单</button>
-           <button id="btnVolDown" class="btn">音量-</button>
-           <button id="btnVolUp" class="btn">音量+</button>
-           <button id="btnScreenshot" class="btn primary">截图</button>
+           <div class="mac-actions-bar">
+             <button id="btnBack" class="mac-btn">返回</button>
+             <button id="btnHome" class="mac-btn">主页</button>
+             <button id="btnMenu" class="mac-btn">菜单</button>
+             <button id="btnVolDown" class="mac-btn">音量-</button>
+             <button id="btnVolUp" class="mac-btn">音量+</button>
+             <button id="btnScreenshot" class="mac-btn primary">截图</button>
            </div>
-           </div>
-           <!-- 已按要求删除退出按钮（原为红色整行） -->
+        </div>
          </div>
        </div>
 
@@ -319,12 +405,7 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
         <b>🧭 Trajectory</b>
         <button id="saveTrajectory">Save</button>
       </div>
-      <div class="traj-grid">
-        <div>
-          <div class="traj-item">＋ New Frame</div>
-          <div class="traj-desc">Updating Soon...</div>
-        </div>
-      </div>
+      <div class="traj-grid" id="trajGrid"></div>
     </div>
 
     <!-- 下：日志 -->
@@ -332,10 +413,7 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
       <h3>Execution Logs</h3>
       <div id="logArea"></div>
     </div>
-  </div>
-</div>
-
-<!-- 聊天界面 -->
+<!-- 聊天界面（并入主栅格右侧） -->
 <div id="chat">
   <div id="chat-messages">
     <div class="message agent">
@@ -347,6 +425,8 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
     <input id="userInput" placeholder="Type your command… (e.g. 打开微信并给张三发消息)">
     <button onclick="sendMsg()">Send</button>
   </div>
+</div>
+</div>
 </div>
 
 <script>
@@ -368,6 +448,8 @@ function sendMsg(){
   const text=ip.value.trim(); if(!text) return;
   pushMsg('user', text);
   addLog(text,'user');
+  // 启动轨迹记录会话
+  try{ if(window.Trajectory && typeof window.Trajectory.start === 'function'){ window.Trajectory.start(text); } }catch{}
   ip.value='';
   setTimeout(()=>{
     const reply='Understood. Executing: '+text;
@@ -384,6 +466,48 @@ function pushMsg(role,text){
   document.getElementById('chat-messages').appendChild(msg);
   msg.scrollIntoView();
 }
+
+// 轨迹管理器：记录每步 action 与截图
+const Trajectory = {
+  steps: [],
+  start(command){ this.steps = []; this._renderClear(); addLog('开始执行：'+command, 'agent'); },
+  async capture(action, serial){
+    try{
+      const url = serial ? `/api/screenshot?serial=${encodeURIComponent(serial)}` : '/api/screenshot';
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('截图接口返回错误');
+      const blob = await res.blob();
+      this.add(action, blob);
+    }catch(e){ addLog('轨迹截图失败：'+(e?.message||e),'agent'); }
+  },
+  add(action, blob){
+    const imgUrl = URL.createObjectURL(blob);
+    const step = { action, imgUrl, time: Date.now() };
+    this.steps.push(step);
+    this._renderStep(step, this.steps.length);
+  },
+  save(){
+    const payload = this.steps.map((s,i)=>({ index:i+1, action:s.action, time:s.time }));
+    const blob = new Blob([JSON.stringify(payload,null,2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `trajectory-${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+    a.click(); setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  },
+  _renderClear(){ const grid = document.getElementById('trajGrid'); if(grid){ grid.innerHTML = ''; } },
+  _renderStep(step, idx){
+    const grid = document.getElementById('trajGrid'); if(!grid) return;
+    const card = document.createElement('div'); card.className = 'traj-item traj-card';
+    const img = document.createElement('img'); img.className = 'traj-thumb'; img.src = step.imgUrl; img.alt = `Step ${idx}`;
+    const meta = document.createElement('div'); meta.className = 'traj-desc traj-meta';
+    meta.innerHTML = `<b class="action">${step.action||'action'}</b><span class="index">#${idx}</span>`;
+    card.appendChild(img); card.appendChild(meta);
+    grid.appendChild(card);
+  }
+};
+window.Trajectory = Trajectory;
+// 绑定 Save 按钮
+try{ const btn = document.getElementById('saveTrajectory'); if(btn){ btn.onclick = ()=>Trajectory.save(); } }catch{}
 
 /* 主题切换 */
 function toggleTheme(){
@@ -449,7 +573,20 @@ function updateFloatingInfo(){
 function toggleFloatingPanel(show){
   const panel = document.getElementById('floatingPanel');
   if (!panel) return;
-  panel.style.display = show ? 'block' : 'none';
+  if(show){
+    panel.classList.add('mac-panel');
+    panel.classList.add('hidden');
+    panel.style.display = 'block';
+    requestAnimationFrame(()=>{
+      panel.classList.add('is-open');
+      panel.classList.remove('hidden');
+    });
+  }else{
+    panel.classList.remove('is-open');
+    panel.classList.add('hidden');
+    const onEnd = ()=>{ panel.style.display = 'none'; panel.removeEventListener('transitionend', onEnd); };
+    panel.addEventListener('transitionend', onEnd);
+  }
 }
 
 function renderDeviceList(devices){
@@ -460,7 +597,7 @@ function renderDeviceList(devices){
     const info = `${d.serial}｜${d.model||'-'}｜${d.resolution||'-'}｜${d.state||'-'}`;
     const serialAttr = (d.serial||'').replace(/"/g,'');
     return `<div>
-      <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px dashed var(--border)">
+      <label class="mac-list-item">
         <input type="radio" name="selDevice" value="${serialAttr}" ${idx===0?'checked':''} />
         <span>${info}</span>
       </label>
@@ -787,6 +924,18 @@ function startPreview(){
   // 服务器发送统计：仅在详细模式显示
   socket.on('video_stats', (s) => { statsPackets = s?.packets||0; addDebug(`服务器发送统计 packets=${s?.packets||0} bytes=${s?.bytes||0}`); });
 
+  // 轨迹步骤推送：后端可通过 Socket 触发
+  socket.on('trajectory_step', async (payload) => {
+    try{
+      const action = (payload && (payload.action||payload.act)) || 'Action';
+      const serial = (payload && payload.serial) || getSelectedSerial();
+      addLog('轨迹步骤：' + action, 'agent');
+      if(window.Trajectory && typeof window.Trajectory.capture === 'function'){
+        await window.Trajectory.capture(action, serial);
+      }
+    }catch(e){ addLog('处理轨迹步骤失败：'+(e?.message||e),'agent'); }
+  });
+
   socket.on('connect', () => {
     addLog('Socket 已连接，开始接收视频…','agent');
     if (overlay) overlay.style.display = 'none';
@@ -834,8 +983,18 @@ function wireControls(){
   if(connectBtn) connectBtn.onclick = startPreview;
   // 头部“控制面板”
   const headerControl = byId('headerControl');
+  const statusDot = headerControl ? headerControl.querySelector('.status-dot') : null;
+  const statusText = headerControl ? headerControl.querySelector('.status-text') : null;
+  function updateHeaderStatus(){
+    const online = (typeof socket !== 'undefined') && socket && socket.connected;
+    if(headerControl){ headerControl.disabled = !online; }
+    if(statusDot){ statusDot.classList.toggle('online', online); statusDot.classList.toggle('offline', !online); }
+    if(statusText){ statusText.textContent = online ? '控制面板' : '设备离线'; }
+  }
+  updateHeaderStatus();
+  setInterval(updateHeaderStatus, 1000);
   if(headerControl) headerControl.onclick = () => {
-    if (socket && socket.connected) { fetchDevices(); delegateDeviceList(); toggleFloatingPanel(true); refreshSelectedDeviceInfo(); }
+    if ((typeof socket !== 'undefined') && socket && socket.connected) { fetchDevices(); delegateDeviceList(); toggleFloatingPanel(true); refreshSelectedDeviceInfo(); }
     else { addLog('设备离线，无法打开控制中心','agent'); }
   };
   // 模型加载按钮与面板
