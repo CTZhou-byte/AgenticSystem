@@ -248,23 +248,21 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
 .control-bar .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .control-bar .btn:disabled{opacity:0.6;cursor:not-allowed}
 </style><!-- 引入 web-scrcpy 客户端资源（与 connect 保持一致） -->
-    <script src="/ws-assets/js/socket.io.js"></script>
-    <script src="/ws-assets/js/input.js"></script>
-    <script src="/ws-assets/js/exp-golomb.js"></script>
-    <script src="/ws-assets/js/h264-sps-parser.js"></script>
-    <script src="/ws-assets/js/video_parser.js"></script>
-    <script src="/ws-assets/js/jmuxer.min.js"></script>
+    <script src="/static/js/socket.io.js"></script>
+    <script src="/static/js/input.js?v=3"></script>
+    <script src="/static/js/exp-golomb.js"></script>
+    <script src="/static/js/h264-sps-parser.js"></script>
+    <script src="/static/js/video_parser.js"></script>
+    <script src="/static/js/jmuxer.min.js"></script>
 </head>
 
 <body>
 <header>
   <h1>🧠 Cognitive OS Agent</h1>
   <div style="display:flex;align-items:center;gap:16px;">
-    <select id="agentMode" style="background:none;border:1px solid var(--border);
-        color:inherit;border-radius:6px;padding:4px 8px;cursor:pointer;">
-      <option>UI-TARS</option><option>AgentCPM-GUI</option><option>GUI-Owl</option>
-    </select>
-    <button id="headerControl" class="btn" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);cursor:pointer" disabled>设备离线</button>
+    <!-- 替换下拉框为“模型加载”按钮（与主题切换一致的无边框样式） -->
+    <button id="modelLoadBtn" class="btn" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;">🧩 模型加载</button>
+    <button id="headerControl" class="btn" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;" disabled>设备离线</button>
     <button id="themeToggle" onclick="toggleTheme()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:14px;">🌓 Theme</button>
   </div>
 </header>
@@ -300,76 +298,20 @@ header h1{margin:0;font-size:18px;color:var(--accent);font-weight:600;}
               <div style="display:flex;gap:8px;align-items:center;"><button id="btnRefreshInfo" class="btn">刷新信息</button></div>
             </div>
             <div id="deviceInfoKV" class="details" style="margin:6px 0 8px 0;padding:10px;border:1px solid rgba(255,255,255,0.14);border-radius:10px;background:rgba(255,255,255,0.04)"></div>
-          </div>
-          <div style="margin-top:6px;">
-            <div class="control-center">
-              <div class="cc-header">
-                <div class="cc-title">控制面板 Control Center</div>
-                <div class="cc-sub">设备：<span id="ccSerial">-</span></div>
-              </div>
-              <div class="cc-grid">
-                <section class="control-card">
-                  <div class="cc-card-title">模拟按键</div>
-                  <div class="cc-actions">
-                    <button id="btnCopyDevice" class="btn pill">复制（Ctrl + C）</button>
-                    <button id="btnPasteDevice" class="btn pill">粘贴（Ctrl + V）</button>
-                  </div>
-                </section>
-
-                <section class="control-card">
-                  <div class="cc-card-title">剪贴板与输入</div>
-                  <div class="cc-actions input-row">
-                    <button id="btnClipboardPull" class="btn">从设备同步</button>
-                    <button id="btnClipboardPush" class="btn">同步至设备</button>
-                    <button id="btnClipboardPushPaste" class="btn">同步并粘贴</button>
-                  </div>
-                  <div class="cc-actions input-row">
-                    <input id="clipboardInput" placeholder="输入文本" />
-                    <button id="btnClipboardSet" class="btn">设定剪贴板</button>
-                  </div>
-                  <div class="cc-actions input-row">
-                    <input id="typeEnterInput" placeholder="输入文本后回车" />
-                    <button id="btnTypeEnter" class="btn primary">发送</button>
-                  </div>
-                </section>
-
-                <section class="control-card">
-                  <div class="cc-card-title">打开链接</div>
-                  <div class="cc-actions input-row">
-                    <input id="openUrlInput" placeholder="https://" />
-                    <button id="btnOpenUrl" class="btn primary">打开</button>
-                  </div>
-                </section>
-
-                <section class="control-card">
-                  <div class="cc-card-title">导航与系统</div>
-                  <div class="cc-actions">
-                    <button id="btnBack" class="btn">返回</button>
-                    <button id="btnHome" class="btn">主页</button>
-                    <button id="btnMenu" class="btn">菜单</button>
-                    <button id="btnVolDown" class="btn">音量-</button>
-                    <button id="btnVolUp" class="btn">音量+</button>
-                    <button id="btnScreenshot" class="btn primary">截图</button>
-                  </div>
-                </section>
-              </div>
-            </div>
-            <div class="row" style="margin-top:10px;">
-              <button id="btnBack" class="btn">返回</button>
-              <button id="btnHome" class="btn">主页</button>
-              <button id="btnMenu" class="btn">菜单</button>
-              <button id="btnVolDown" class="btn">音量-</button>
-              <button id="btnVolUp" class="btn">音量+</button>
-              <button id="btnScreenshot" class="btn primary">截图</button>
-            </div>
-          </div>
-          <!-- 退出：红色长条按钮，位于面板底部 -->
-          <div class="row" style="margin-top:12px;">
-            <button id="btnDisconnect" class="btn danger block">退出</button>
-          </div>
-        </div>
-      </div>
-    </div>
+           </div>
+           <!-- 回滚：移除控制中心复杂卡片，保留单行导航按钮 -->
+           <div class="row" style="margin-top:10px;">
+           <button id="btnBack" class="btn">返回</button>
+           <button id="btnHome" class="btn">主页</button>
+           <button id="btnMenu" class="btn">菜单</button>
+           <button id="btnVolDown" class="btn">音量-</button>
+           <button id="btnVolUp" class="btn">音量+</button>
+           <button id="btnScreenshot" class="btn primary">截图</button>
+           </div>
+           </div>
+           <!-- 已按要求删除退出按钮（原为红色整行） -->
+         </div>
+       </div>
 
     <!-- 右：轨迹 -->
     <div class="traj-panel">
@@ -415,6 +357,11 @@ function addLog(msg, role='system'){
   document.getElementById('logArea').appendChild(log);
   log.scrollIntoView();
 }
+// 调试日志控制（回退时缺失，补回）
+window.LOG_VERBOSE = false;
+const LOG_SAMPLE_N = 60;
+function addDebug(msg){ if (window.LOG_VERBOSE) addLog(msg,'agent'); }
+function addDebugSample(counter, prefix, len){ if (window.LOG_VERBOSE && counter % LOG_SAMPLE_N === 0) addLog(`${prefix} #${counter} 长度=${len||0}`,'agent'); }
 
 function sendMsg(){
   const ip=document.getElementById('userInput');
@@ -692,42 +639,121 @@ function startPreview(){
   if (fallbackTimer){ clearTimeout(fallbackTimer); fallbackTimer = null; }
   if (mjpegEl){ mjpegEl.style.display = 'none'; if (mjpegEl.src) mjpegEl.src = ''; }
   videoElement.style.display = 'block';
+  let jmuxerReady = false;
+  let initFed = false;
+  let pendingInit = null;
+  let pendingFrames = [];
+  const MAX_PENDING = 120; // 限制缓存帧数量，避免突发
+  let draining = false;
+  let parserFrameCount = 0;
+  let jmuxerFeedCount = 0;
+  const drainPending = () => {
+    if (!jmuxerReady || !initFed) return;
+    if (draining) return;
+    draining = true;
+    const pump = () => {
+      try{
+        if (!jmuxerReady || !initFed) { draining = false; return; }
+        const f = pendingFrames.shift();
+        if (f) {
+          jmuxer && jmuxer.feed({ video: f });
+          jmuxerFeedCount += 1;
+          addLog('JMuxer 排队送帧 #' + jmuxerFeedCount + ' 长度=' + (f?.length||0),'agent');
+          setTimeout(pump, 10);
+        } else {
+          draining = false;
+        }
+      }catch(e){
+        draining = false;
+        addLog('排队送帧失败：' + ((e && (e.message || e.msg || e.name)) || String(e)), 'agent');
+      }
+    };
+    pump();
+  };
 
-  // 构建解析器
   if (typeof VideoParser === 'undefined') { addLog('VideoParser 未加载，请检查 /ws-assets/js/ 引入','agent'); return; }
   parser = new VideoParser(({ type, data }) => {
-    if (type === 'nalu') {
-      jmuxer && jmuxer.feed({ video: data });
-    } else if (type === 'init') {
-      jmuxer && jmuxer.feed({ video: data["sps"] });
-      jmuxer && jmuxer.feed({ video: data["pps"] });
-      addLog('收到 SPS/PPS，初始化完成','agent');
-    } else if (type === 'screen_size') {
-      initInput(data["width"], data["height"]);
-      adjustPhoneScreen(data["width"], data["height"]);
-    } else if (type === 'size_change') {
-      if (input) { input.resizeScreen(data["width"], data["height"]); }
-      adjustPhoneScreen(data["width"], data["height"]);
+    try {
+      if (type === 'init' && data) {
+        pendingInit = data;
+        if (jmuxerReady) {
+          jmuxer && jmuxer.feed({ video: data["sps"] });
+          jmuxer && jmuxer.feed({ video: data["pps"] });
+          initFed = true;
+          addLog('收到 SPS/PPS，初始化完成','agent');
+          drainPending();
+        }
+      } else if (type === 'nalu' || type === 'frame') {
+        parserFrameCount += 1;
+        // addLog('解析器输出帧 #' + parserFrameCount + ' 长度=' + (data?.length||0),'agent');
+        if (!jmuxerReady || !initFed) {
+          if (pendingFrames.length < MAX_PENDING) pendingFrames.push(data);
+        } else {
+          jmuxer && jmuxer.feed({ video: data });
+          jmuxerFeedCount += 1;
+          // addLog('JMuxer 已送帧 #' + jmuxerFeedCount + ' 长度=' + (data?.length||0),'agent');
+        }
+      } else if (type === 'screen_size') {
+        initInput(data["width"], data["height"]);
+        adjustPhoneScreen(data["width"], data["height"]);
+      } else if (type === 'size_change') {
+        if (input) { input.resizeScreen(data["width"], data["height"]); }
+        adjustPhoneScreen(data["width"], data["height"]);
+      }
+    } catch (feedErr) {
+      addLog('JMuxer feed 错误: ' + ((feedErr && (feedErr.message || feedErr.msg || feedErr.name)) || String(feedErr)),'agent');
     }
   });
 
   if (typeof JMuxer === 'undefined') { addLog('JMuxer 未加载，请检查脚本引入','agent'); return; }
   jmuxer = new JMuxer({
-    node: 'player', mode: 'video', fps: 60, flushingTime: 0, clearBuffer: true,
+    node: 'player',
+    mode: 'video',
+    // 低延迟配置：与 connect.html 保持一致
+    flushingTime: 0,
+    fps: 60,
+    clearBuffer: true,
     onReady: () => {
+      jmuxerReady = true;
       addLog('MSE 就绪，等待视频数据…','agent');
+      try {
+        if (pendingInit && !initFed) {
+          jmuxer && jmuxer.feed({ video: pendingInit["sps"] });
+          jmuxer && jmuxer.feed({ video: pendingInit["pps"] });
+          initFed = true;
+          addLog('已在 MSE 就绪后送出 SPS/PPS','agent');
+        }
+        drainPending();
+      } catch (e) {
+        addLog('就绪后送出缓存帧失败：' + ((e && (e.message || e.msg || e.name)) || String(e)),'agent');
+      }
       videoElement.controls = false;
       videoElement.muted = true;
       videoElement.autoplay = true;
       videoElement.playsInline = true;
       try { videoElement.play(); } catch(e) { addLog('自动播放被阻止: ' + (e?.message||e),'agent'); }
-      // 启动超时回退：1.5s 未收到帧则切换到 MJPEG
-      fallbackTimer = setTimeout(() => { if (feedCount === 0) startMjpegFallback(); }, 1500);
+      fallbackTimer = setTimeout(() => { if (feedCount === 0 && (typeof statsPackets === 'number' ? statsPackets : 0) === 0) startMjpegFallback(); }, 5000);
     },
-    onError: (err) => { addLog('MSE 错误：' + err.message,'agent'); }
+    onError: (err) => {
+      addLog('MSE 错误：' + ((err && (err.message || err.msg || err.name)) || String(err)),'agent');
+      // 出错后暂缓送入，等待下一次 onReady
+      jmuxerReady = false;
+      initFed = false;
+    }
   });
-
   socket = io({ reconnection: false, autoConnect: true });
+
+  // 观察所有事件（仅在详细模式）
+  if (window.LOG_VERBOSE && socket && typeof socket.onAny === 'function') {
+    socket.onAny((event, ...args) => {
+      try{ addDebug('Socket 事件：' + event + ' (' + (args?.length||0) + ' 个参数)'); }catch{}
+    });
+  }
+
+  socket.on('connect_error', (err) => { addLog('Socket 连接错误：' + ((err && (err.message||err))||'unknown'),'agent'); });
+  socket.on('reconnect_attempt', () => { addDebug('Socket 正在尝试重连…'); });
+  socket.on('reconnect_error', (err) => { addLog('Socket 重连错误：' + ((err && (err.message||err))||'unknown'),'agent'); });
+  socket.on('reconnect_failed', () => { addLog('Socket 重连失败','agent'); });
 
   socket.on('video_data', async (data) => {
     try{
@@ -738,15 +764,12 @@ function startPreview(){
         const buf = await data.arrayBuffer();
         bytes = new Uint8Array(buf);
       } else if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView && ArrayBuffer.isView(data)) {
-        // TypedArray 或 DataView：尊重 byteOffset/byteLength
         bytes = new Uint8Array(data.buffer, data.byteOffset || 0, data.byteLength || data.length || 0);
       } else if (data && data.buffer instanceof ArrayBuffer && typeof data.byteLength === 'number') {
-        // Buffer-like 对象
         const offset = data.byteOffset || 0;
         const len = data.byteLength;
         bytes = new Uint8Array(data.buffer, offset, len);
       } else if (typeof data === 'string') {
-        // 极端兼容：字符串（不期望发生）
         try {
           const bin = atob(data);
           const arr = new Uint8Array(bin.length);
@@ -754,13 +777,15 @@ function startPreview(){
           bytes = arr;
         } catch(e) {}
       }
-      if (!bytes) { addLog('收到未知类型视频块：' + Object.prototype.toString.call(data),'agent'); return; }
+      if (!bytes) { addDebug('收到未知类型视频块：' + Object.prototype.toString.call(data)); return; }
       feedCount += 1;
+      addDebugSample(feedCount, '收到视频块', bytes.length);
       parser && parser.appendData(bytes);
     }catch(err){ addLog('处理视频块失败：' + (err?.message||err),'agent'); }
   });
-
-  // 已移除服务器发送统计的调试日志，避免干扰界面
+  
+  // 服务器发送统计：仅在详细模式显示
+  socket.on('video_stats', (s) => { statsPackets = s?.packets||0; addDebug(`服务器发送统计 packets=${s?.packets||0} bytes=${s?.bytes||0}`); });
 
   socket.on('connect', () => {
     addLog('Socket 已连接，开始接收视频…','agent');
@@ -807,13 +832,33 @@ function wireControls(){
   const disconnectBtn = byId('btnDisconnect');
 
   if(connectBtn) connectBtn.onclick = startPreview;
-  // 顶部左侧控件：未连接显示“设备离线”，连接显示“控制面板”可打开
+  // 头部“控制面板”
   const headerControl = byId('headerControl');
   if(headerControl) headerControl.onclick = () => {
     if (socket && socket.connected) { fetchDevices(); delegateDeviceList(); toggleFloatingPanel(true); refreshSelectedDeviceInfo(); }
     else { addLog('设备离线，无法打开控制中心','agent'); }
   };
-  // 控制中心左上角关闭叉
+  // 模型加载按钮与面板
+  const modelLoadBtn = byId('modelLoadBtn');
+  const modelSheet = byId('modelSheet');
+  const modelSheetClose = byId('modelSheetClose');
+  if(modelLoadBtn){ modelLoadBtn.onclick = () => { modelSheet.style.display = 'block'; }; }
+  if(modelSheetClose){ modelSheetClose.onclick = () => { modelSheet.style.display = 'none'; }; }
+  // 选择模型：设置激活态并记录当前模型
+  const cards = document.querySelectorAll('#modelSheet .model-card');
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.getAttribute('data-id');
+      window.currentModel = id;
+      // 高亮选中项
+      cards.forEach(c => { c.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border'); });
+      card.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+      addLog('已选择模型：' + id, 'agent');
+      modelSheet.style.display = 'none';
+    });
+  });
+
+  // 控制中心关闭与其他绑定 ...
   const btnClosePanel = byId('btnClosePanel');
   if(btnClosePanel) btnClosePanel.onclick = () => { toggleFloatingPanel(false); };
   const btnRefreshDevices = document.getElementById('btnRefreshDevices');
@@ -1021,6 +1066,39 @@ function buildDeviceOverview(info){
   // 返回单一容器中的双列网格，不再包含“概览”标题或内层卡片
   return `<div class=\"ov-grid\">${rows}</div>`;
 }
+
 </script>
+<!-- 模型选择面板：轻量弹窗（放置于 body 结束前） -->
+<div id="modelSheet" style="position:fixed;right:24px;top:64px;z-index:1200;display:none;
+  background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,0.45);
+  width:360px;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);">
+    <b style="color:var(--accent)">选择模型</b>
+    <button id="modelSheetClose" class="btn" style="padding:4px 8px;">✕</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr;gap:10px;padding:12px;">
+    <div class="model-card" data-id="ui-tars" style="display:flex;gap:12px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;cursor:pointer;">
+      <img src="/static/imgs/ui-tars.png" alt="UI-TARS" style="width:48px;height:48px;border-radius:8px;object-fit:cover" />
+      <div>
+        <div style="font-weight:600;">UI-TARS</div>
+        <div style="font-size:12px;color:#a9abb3">以视觉交互为主的 UI Agent</div>
+      </div>
+    </div>
+    <div class="model-card" data-id="agentcpm-gui" style="display:flex;gap:12px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;cursor:pointer;">
+      <img src="/static/imgs/agentcpm-gui.png" alt="AgentCPM-GUI" style="width:48px;height:48px;border-radius:8px;object-fit:cover" />
+      <div>
+        <div style="font-weight:600;">AgentCPM-GUI</div>
+        <div style="font-size:12px;color:#a9abb3">中文多模态，表格控件支持</div>
+      </div>
+    </div>
+    <div class="model-card" data-id="gui-owl" style="display:flex;gap:12px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:10px;cursor:pointer;">
+      <img src="/static/imgs/gui-owl.jpeg" alt="GUI-Owl" style="width:48px;height:48px;border-radius:8px;object-fit:cover" />
+      <div>
+        <div style="font-weight:600;">GUI-Owl</div>
+        <div style="font-size:12px;color:#a9abb3">轻量、快速的界面理解</div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

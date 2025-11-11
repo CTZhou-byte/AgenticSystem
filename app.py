@@ -7,12 +7,7 @@ import sys
 import queue
 import time
 
-# 优雅回退：优先从 web-scrcpy 导入，其次使用 utils.scrcpy
-try:
-    sys.path.append(os.path.join(os.getcwd(), "web-scrcpy"))
-    from scrcpy import Scrcpy
-except Exception:
-    from utils.scrcpy import Scrcpy
+from utils.scrcpy import Scrcpy
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config['SECRET_KEY'] = 'secret!'
@@ -322,28 +317,30 @@ def send_video_data(data):
 
 @socketio.on('connect')
 def handle_connect():
-    global scpy_ctx, client_sid
+    global scpy_ctx, client_sid, message_queue
     print('Client connected')
 
     if scpy_ctx is not None:
-        print(f'reject connection, client {scpy_ctx} is already connected')
-        return False
-    else:
-        client_sid = request.sid
-        scpy_ctx = Scrcpy()
-        scpy_ctx.scrcpy_start(send_video_data, video_bit_rate)
-        # 仅在视频套接字建立成功时启动发送线程
-        if getattr(scpy_ctx, 'video_socket', None) is None:
-            print('scrcpy_start failed: video socket not established')
-            try:
-                emit('server_error', {'message': 'scrcpy_start_failed'})
-            except Exception as e:
-                print(f"emit server_error failed: {e}")
-            scpy_ctx = None
-            client_sid = None
-            return False
-        socketio.start_background_task(video_send_task)
-        print(f'connectioned, client  {scpy_ctx}')
+        print(f'existing client {scpy_ctx} detected, stopping it to accept new connection')
+        try:
+            scpy_ctx.scrcpy_stop()
+        except Exception as e:
+            print(f'error stopping previous scrcpy: {e}')
+        scpy_ctx = None
+        client_sid = None
+        # 重置消息队列，避免旧数据残留
+        try:
+            message_queue = queue.Queue()
+        except Exception as e:
+            print(f'failed to reset message_queue: {e}')
+
+    client_sid = request.sid
+    scpy_ctx = Scrcpy()
+    print('starting scrcpy...')
+    scpy_ctx.scrcpy_start(send_video_data, video_bit_rate)
+    # 取消即时拒绝：scrcpy 套接字可能在几百毫秒内建立，保持连接等待视频出站
+    socketio.start_background_task(video_send_task)
+    print(f'connectioned, client  {scpy_ctx}')
 
 
 @socketio.on('disconnect')
@@ -360,8 +357,25 @@ def handle_disconnect():
 @socketio.on('control_data')
 def handle_control_data(data):
     global scpy_ctx
-    if scpy_ctx:
-        scpy_ctx.scrcpy_send_control(data)
+    try:
+        if scpy_ctx:
+            # Ensure payload is bytes for socket.send()
+            if isinstance(data, list):
+                payload = bytes(data)
+            elif isinstance(data, bytearray):
+                payload = bytes(data)
+            elif isinstance(data, bytes):
+                payload = data
+            else:
+                # Fallback: attempt to build bytes from buffer-like
+                try:
+                    payload = bytes(data)
+                except Exception:
+                    print(f"Unsupported control_data type: {type(data)}")
+                    return
+            scpy_ctx.scrcpy_send_control(payload)
+    except Exception as e:
+        print(f"control_data error: {e}")
 
 
 @app.route("/api/clipboard", methods=["GET","POST"])

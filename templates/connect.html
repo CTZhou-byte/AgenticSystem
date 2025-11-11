@@ -1,304 +1,224 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>设备连接与预览（后端驱动）</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
+    <title>Web server for scrcpy</title>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; padding: 16px; }
-        .row { display: flex; gap: 16px; align-items: flex-start; }
-        .card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
-        .btn { padding: 8px 12px; border: 1px solid #666; border-radius: 6px; cursor: pointer; background: #f7f7f7; }
-        .btn.primary { background: #2b7cff; color: #fff; border-color: #2b7cff; }
-        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-        .icon-container { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
-        .icon { padding: 6px; font-size: 18px; cursor: pointer; color: #333; transition: color 0.3s ease; }
-        .icon:hover { color: #2b7cff; }
-        .icon-container i:nth-child(4) { margin-left: auto; }
-        .video-wrapper { position: relative; width: 100%; max-width: 720px; height: 420px; background: #000; border-radius: 8px; overflow: hidden; margin-top: 8px; }
-        video, img.preview { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 100%; max-height: 100%; width: auto; height: auto; background: black; }
-        #status { font-family: Arial, sans-serif; color: #333; }
-        #canvas, #screen { display: none; }
-        .input-inline { display: inline-flex; align-items: center; gap: 8px; }
-        .input-inline input { width: 280px; padding: 6px 8px; border: 1px solid #ccc; border-radius: 6px; }
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        .video-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            background: black;
+        }
+
+        #status {
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        .icon-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .icon {
+            padding: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            color: #eee;
+            transition: color 0.3s ease;
+        }
+
+        .icon:hover {
+            color: #007BFF;
+        }
+
+        .icon-container i:nth-child(4) {
+            margin-left: auto;
+        }
     </style>
-    <!-- 使用本地 socket.io 与 JMuxer 资源 -->
-    <script src="/ws-assets/js/socket.io.js"></script>
-    <script src="/ws-assets/js/input.js"></script>
-    <script src="/ws-assets/js/exp-golomb.js"></script>
-    <script src="/ws-assets/js/h264-sps-parser.js"></script>
-    <script src="/ws-assets/js/video_parser.js"></script>
-    <script src="/ws-assets/js/jmuxer.min.js"></script>
+    <script src="/static/js/socket.io.js"></script>
+    <script src="/static/js/input.js?v=3"></script>
+    <script src="/static/js/exp-golomb.js"></script>
+    <script src="/static/js/h264-sps-parser.js"></script>
+    <script src="/static/js/video_parser.js"></script>
 </head>
+
 <body>
-    <h1>连接设备（后端 Scrcpy）</h1>
-
-    <div class="card">
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
-            <button id="startBackendPreview" class="btn primary">连接并预览</button>
-            <span id="status">未连接</span>
-        </div>
-        <div class="mono" id="log" style="margin-top:8px; white-space:pre-wrap;"></div>
-        <div class="icon-container">
-            <i id="power-icon" class="icon" title="电源">⏻</i>
-            <i id="volume-down-icon" class="icon" title="音量-">🔉-</i>
-            <i id="volume-up-icon" class="icon" title="音量+">🔊+</i>
-            <i id="back-icon" class="icon" title="返回">←</i>
-            <i id="home-icon" class="icon" title="主页">⌂</i>
-            <i id="menu-icon" class="icon" title="菜单">≡</i>
-        </div>
-        <div class="video-wrapper">
-            <video id="player" autoplay muted webkit-playsinline playsinline x5-playsinline></video>
-            <img id="mjpeg" class="preview" alt="MJPEG 预览" style="display:none;" />
-        </div>
+    <p id="status" style="display: none;">connecting to device...</p>
+    <div class="icon-container">
+        <i id="power-icon" class="fa-solid fa-power-off icon"></i>
+        <i id="volume-down-icon" class="fa-solid fa-volume-down icon"></i>
+        <i id="volume-up-icon" class="fa-solid fa-volume-up icon"></i>
+        <i id="back-icon" class="fa-solid fa-arrow-left icon"></i>
+        <i id="home-icon" class="fa-solid fa-house icon"></i>
+        <i id="menu-icon" class="fa-solid fa-bars icon"></i>
     </div>
-
-    <div class="row" style="margin-top:16px;">
-        <div class="card" style="flex:1;">
-            <h3>设备信息</h3>
-            <div>型号：<span id="model">-</span></div>
-            <div>分辨率：<span id="resolution">-</span></div>
-            <div style="margin-top:8px; display:flex; gap:8px;">
-                <button id="readModel" class="btn">读取型号</button>
-            </div>
-        </div>
-        <div class="card" style="flex:1;">
-            <h3>ADB Shell</h3>
-            <textarea id="shellInput" rows="4" style="width:100%;" placeholder="输入 ADB shell 指令，例如：getprop ro.product.model"></textarea>
-            <div style="margin-top:8px; display:flex; gap:8px;">
-                <button id="runShell" class="btn">执行</button>
-            </div>
-            <pre id="shellOutput" class="mono" style="margin-top:8px; min-height:80px;"></pre>
-        </div>
+    <div class="video-wrapper">
+        <video id="player" autoplay muted webkit-playsinline playsinline x5-playsinline></video>
     </div>
-
+    <script src="/static/js/jmuxer.min.js"></script>
     <script>
-        // 后端 ADB：通过 HTTP 调用后端执行 shell
-        function backendAdb() {
-            return {
-                shell: async (cmd) => {
-                    const res = await fetch('/api/shell', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ cmd })
-                    });
-                    const data = await res.json();
-                    if (!data.ok) throw new Error('后端 shell 执行失败');
-                    return data.output || '';
-                },
-            };
-        }
-
-        const logEl = document.getElementById('log');
-        const statusEl = document.getElementById('status');
-        const modelEl = document.getElementById('model');
-        const resolutionEl = document.getElementById('resolution');
-        const connectBtn = document.getElementById('startBackendPreview');
-        const readModelBtn = document.getElementById('readModel');
-        const runShellBtn = document.getElementById('runShell');
-        const shellInput = document.getElementById('shellInput');
-        const shellOutput = document.getElementById('shellOutput');
         const videoElement = document.getElementById('player');
-        const mjpegEl = document.getElementById('mjpeg');
-
-        function appendLog(msg) {
-            logEl.textContent += `\n${msg}`;
-            logEl.scrollTop = logEl.scrollHeight;
-        }
-
-        async function readModel() {
-            try {
-                const out = await backendAdb().shell('getprop ro.product.model');
-                modelEl.textContent = (out || '').trim() || '-';
-            } catch (e) {
-                console.error(e);
-                appendLog('读取型号失败：' + (e?.message || e));
+        const jmuxer = new JMuxer({
+            node: 'player',
+            mode: 'video',
+            flushingTime: 0,
+            fps: 60,
+            clearBuffer: true,
+            onReady: () => {
+                document.getElementById('status').textContent = 'MSE done, waiting for data...';
+                if (videoElement) {
+                    videoElement.controls = false;
+                    videoElement.style.cssText = `
+                        -webkit-media-controls: none !important;
+                        -webkit-media-controls-enclosure: none !important;
+                        -webkit-media-controls-panel: none !important;
+                        -webkit-media-controls-play-button: none !important;
+                        -webkit-media-controls-timeline: none !important;
+                        -webkit-media-controls-current-time-display: none !important;
+                        -webkit-media-controls-time-remaining-display: none !important;
+                        -webkit-media-controls-mute-button: none !important;
+                        -webkit-media-controls-volume-slider: none !important;
+                        -webkit-media-controls-fullscreen-button: none !important;
+                        -moz-controls: none !important;
+                        -ms-media-controls: none !important;
+                    `;
+                }
+            },
+            onError: (err) => {
+                document.getElementById('status').textContent = 'MSE Error: ' + err.message;
             }
-        }
+        });
 
-        async function runShell() {
-            const cmd = shellInput.value.trim();
-            if (!cmd) return;
-            try {
-                const text = await backendAdb().shell(cmd);
-                shellOutput.textContent = text;
-            } catch (e) {
-                console.error(e);
-                shellOutput.textContent = '执行失败：' + (e?.message || e);
-            }
-        }
+        const socket = io({
+            reconnection: false,
+            autoConnect: true
+        });
 
-        // 解析与输入初始化
-        let input = null;
-        let socket = null;
-        let jmuxer = null;
-        let fallbackTimer = null;
-
+        var input = null;
         function initInput(width, height) {
             function input_data_cb(data) {
                 socket.emit('control_data', data);
             }
-            if (typeof ScrcpyInput !== 'undefined') {
-                input = new ScrcpyInput(input_data_cb, videoElement, width, height, false);
 
-                const powerIcon = document.getElementById('power-icon');
-                const volumeDownIcon = document.getElementById('volume-down-icon');
-                const volumeUpIcon = document.getElementById('volume-up-icon');
-                const backUpIcon = document.getElementById('back-icon');
-                const homeUpIcon = document.getElementById('home-icon');
-                const menuUpIcon = document.getElementById('menu-icon');
+            input = new ScrcpyInput(input_data_cb, videoElement, width, height, false);
+            videoElement.tabIndex = 0; try { videoElement.focus({ preventScroll: true }); } catch(e) {}
 
-                powerIcon.addEventListener('mousedown', function () { input.screen_on_off(0); });
-                powerIcon.addEventListener('mouseup', function () { input.screen_on_off(1); });
-                volumeDownIcon.addEventListener('mousedown', (event) => { input.snedKeyCode(event, 0, 25); });
-                volumeDownIcon.addEventListener('mouseup', (event) => { input.snedKeyCode(event, 1, 25); });
-                volumeUpIcon.addEventListener('mousedown', (event) => { input.snedKeyCode(event, 0, 24); });
-                volumeUpIcon.addEventListener('mouseup', (event) => { input.snedKeyCode(event, 1, 24); });
-                backUpIcon.addEventListener('mousedown', (event) => { input.snedKeyCode(event, 0, 4); });
-                backUpIcon.addEventListener('mouseup', (event) => { input.snedKeyCode(event, 1, 4); });
-                homeUpIcon.addEventListener('mousedown', (event) => { input.snedKeyCode(event, 0, 3); });
-                homeUpIcon.addEventListener('mouseup', (event) => { input.snedKeyCode(event, 1, 3); });
-                menuUpIcon.addEventListener('mousedown', (event) => { input.snedKeyCode(event, 0, 187); });
-                menuUpIcon.addEventListener('mouseup', (event) => { input.snedKeyCode(event, 1, 187); });
-            } else {
-                // 无 ScrcpyInput 时，使用后端 ADB 作为回退
-                const powerIcon = document.getElementById('power-icon');
-                const volumeDownIcon = document.getElementById('volume-down-icon');
-                const volumeUpIcon = document.getElementById('volume-up-icon');
-                const backUpIcon = document.getElementById('back-icon');
-                const homeUpIcon = document.getElementById('home-icon');
-                const menuUpIcon = document.getElementById('menu-icon');
+            const powerIcon = document.getElementById('power-icon');
+            const volumeDownIcon = document.getElementById('volume-down-icon');
+            const volumeUpIcon = document.getElementById('volume-up-icon');
+            const backUpIcon = document.getElementById('back-icon');
+            const homeUpIcon = document.getElementById('home-icon');
+            const menuUpIcon = document.getElementById('menu-icon');
 
-                const sendKeyEvent = async (code) => {
-                    try {
-                        const res = await fetch('/api/shell', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ cmd: `input keyevent ${code}` })
-                        });
-                        const data = await res.json();
-                        if (!data.ok) throw new Error('后端执行失败');
-                        appendLog(`已发送按键 ${code}`);
-                    } catch (e) {
-                        appendLog(`按键失败 ${code}: ${e?.message || e}`);
-                    }
-                };
+            powerIcon.addEventListener('mousedown', function () {
+                input.screen_on_off(0);
+            });
+            powerIcon.addEventListener('mouseup', function () {
+                input.screen_on_off(1);
+            });
 
-                powerIcon?.addEventListener('click', () => sendKeyEvent(26));
-                volumeDownIcon?.addEventListener('click', () => sendKeyEvent(25));
-                volumeUpIcon?.addEventListener('click', () => sendKeyEvent(24));
-                backUpIcon?.addEventListener('click', () => sendKeyEvent(4));
-                homeUpIcon?.addEventListener('click', () => sendKeyEvent(3));
-                menuUpIcon?.addEventListener('click', () => sendKeyEvent(82));
-            }
+            volumeDownIcon.addEventListener('mousedown', (event) => {
+                input.snedKeyCode(event, 0, 25);
+            });
+            volumeDownIcon.addEventListener('mouseup', (event) => {
+                input.snedKeyCode(event, 1, 25);
+            });
+
+            volumeUpIcon.addEventListener('mousedown', (event) => {
+                input.snedKeyCode(event, 0, 24);
+            });
+            volumeUpIcon.addEventListener('mouseup', (event) => {
+                input.snedKeyCode(event, 1, 24);
+            });
+
+            backUpIcon.addEventListener('mousedown', (event) => {
+                input.snedKeyCode(event, 0, 4);
+            });
+            backUpIcon.addEventListener('mouseup', (event) => {
+                input.snedKeyCode(event, 1, 4);
+            });
+            homeUpIcon.addEventListener('mousedown', (event) => {
+                input.snedKeyCode(event, 0, 3);
+            });
+            homeUpIcon.addEventListener('mouseup', (event) => {
+                input.snedKeyCode(event, 1, 3);
+            });
+            menuUpIcon.addEventListener('mousedown', (event) => {
+                input.snedKeyCode(event, 0, 187);
+            });
+            menuUpIcon.addEventListener('mouseup', (event) => {
+                input.snedKeyCode(event, 1, 187);
+            });
         }
 
-        let feedCount = 0;
         const parser = new VideoParser(({ type, data }) => {
             if (type === 'nalu') {
-                jmuxer && jmuxer.feed({ video: data });
+                jmuxer.feed({
+                    video: data
+                });
             } else if (type === 'init') {
-                jmuxer && jmuxer.feed({ video: data["sps"] });
-                jmuxer && jmuxer.feed({ video: data["pps"] });
+                jmuxer.feed({
+                    video: data["sps"]
+                });
+                jmuxer.feed({
+                    video: data["pps"]
+                });
             } else if (type === 'screen_size') {
                 initInput(data["width"], data["height"]);
             } else if (type === 'size_change') {
-                if (input) { input.resizeScreen(data["width"], data["height"]); }
+                if (input) {
+                    input.resizeScreen(data["width"], data["height"]);
+                }
             }
         });
 
-        function startMjpegFallback() {
-            appendLog('未收到视频帧，启用 MJPEG 回退显示…');
-            statusEl.textContent = '已连接（MJPEG 回退）';
-            videoElement.style.display = 'none';
-            mjpegEl.style.display = 'block';
-            mjpegEl.src = '/stream';
-        }
+        socket.on('video_data', (data) => {
+            const newData = new Uint8Array(data);
+            parser.appendData(newData);
+        });
 
-        function startPreview() {
-            // 清理旧连接
-            try { if (socket) socket.disconnect(); } catch(e) {}
-            feedCount = 0;
-            if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
-            mjpegEl.style.display = 'none';
-            if (mjpegEl.src) mjpegEl.src = '';
-            videoElement.style.display = 'block';
+        socket.on('connect', () => {
+            document.getElementById('status').textContent = 'connected, receiving video data...';
+        });
 
-            jmuxer = new JMuxer({
-                node: 'player', mode: 'video', fps: 60, flushingTime: 0, clearBuffer: true,
-                onReady: () => {
-                    appendLog('MSE 就绪，等待视频数据…');
-                    if (videoElement) {
-                        videoElement.controls = false;
-                        videoElement.muted = true;
-                        videoElement.autoplay = true;
-                        videoElement.playsInline = true;
-                        try { videoElement.play(); } catch(e) { appendLog('自动播放被阻止: ' + (e?.message||e)); }
-                    }
-                    // 启动超时回退：1.5s 未收到帧则切换到 MJPEG
-                    fallbackTimer = setTimeout(() => {
-                        if (feedCount === 0) startMjpegFallback();
-                    }, 1500);
-                },
-                onError: (err) => { appendLog('MSE 错误：' + err.message); }
-            });
+        socket.addEventListener('close', () => {
+            document.getElementById('status').textContent = 'connect closed, please refresh the page to reconnect';
+        });
 
-            // 连接到同源的 Socket.IO 服务，按 web-scrcpy 的稳定配置
-            socket = io({ reconnection: false, autoConnect: true });
-            
-            socket.on('video_data', async (data) => {
-                try {
-                    let arrBuf = null;
-                    if (data instanceof ArrayBuffer) {
-                        arrBuf = data;
-                    } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
-                        arrBuf = await data.arrayBuffer();
-                    } else if (data && data.buffer instanceof ArrayBuffer) {
-                        arrBuf = data.buffer;
-                    } else if (data && typeof data === 'object' && typeof data.byteLength === 'number') {
-                        // Buffer-like
-                        arrBuf = data;
-                    }
-                    if (!arrBuf) {
-                        appendLog('收到未知类型视频块：' + Object.prototype.toString.call(data));
-                        return;
-                    }
-                    const newData = new Uint8Array(arrBuf);
-                    feedCount += 1;
-                    parser.appendData(newData);
-                } catch (e) {
-                    appendLog('处理视频块失败：' + (e?.message || e));
-                }
-            });
-            
-            // 新增：收到服务器统计，协助定位是否有视频帧发送
-            socket.on('video_stats', (s) => {
-                appendLog(`服务器发送统计 packets=${s?.packets||0} bytes=${s?.bytes||0}`);
-            });
+        socket.addEventListener('error', (error) => {
+            document.getElementById('status').textContent = 'websocket error: ' + error.message;
+        });
 
-            socket.on('connect', () => {
-                statusEl.textContent = '已连接';
-                appendLog('已连接，接收视频数据中…');
-            });
-
-            socket.on('disconnect', () => {
-                statusEl.textContent = '未连接';
-                appendLog('连接关闭，请重新启动预览');
-                if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
-                mjpegEl.style.display = 'none';
-                if (mjpegEl.src) mjpegEl.src = '';
-            });
-
-            socket.on('error', (error) => {
-                appendLog('WebSocket 错误：' + (error?.message || error));
-            });
-
-            window.addEventListener('beforeunload', () => { socket && socket.disconnect(); });
-        }
-
-        connectBtn.addEventListener('click', startPreview);
-        readModelBtn.addEventListener('click', readModel);
-        runShellBtn.addEventListener('click', runShell);
+        window.addEventListener('beforeunload', () => {
+            socket.disconnect();
+        });
     </script>
 </body>
+
 </html>
